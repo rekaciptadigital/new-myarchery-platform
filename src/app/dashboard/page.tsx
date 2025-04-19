@@ -107,16 +107,16 @@ export default function DashboardPage() {
         <h2 className="font-semibold text-lg mb-4">{editingId ? "Edit Event" : "Buat Event Baru"}</h2>
         <form className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium mb-1">Nama Event</label>
-            <input name="name" value={form.name} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+            <label htmlFor="event-name" className="block text-sm font-medium mb-1">Nama Event</label>
+            <input id="event-name" name="name" value={form.name} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Tanggal</label>
-            <input name="date" type="date" value={form.date} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+            <label htmlFor="event-date" className="block text-sm font-medium mb-1">Tanggal</label>
+            <input id="event-date" name="date" type="date" value={form.date} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select name="status" value={form.status} onChange={handleChange} className="w-full border rounded px-3 py-2">
+            <label htmlFor="event-status" className="block text-sm font-medium mb-1">Status</label>
+            <select id="event-status" name="status" value={form.status} onChange={handleChange} className="w-full border rounded px-3 py-2">
               {statusList.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}

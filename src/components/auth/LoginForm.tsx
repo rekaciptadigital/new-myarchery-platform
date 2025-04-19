@@ -8,11 +8,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useRouter } from "next/navigation";
 
 interface LoginFormProps {
-  onSuccess?: () => void;
   isAdminLogin?: boolean;
 }
 
-export function LoginForm({ onSuccess, isAdminLogin = false }: LoginFormProps) {
+export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +35,7 @@ export function LoginForm({ onSuccess, isAdminLogin = false }: LoginFormProps) {
         // Organizer login akan diarahkan ke dashboard organizer
         router.push("/dashboard");
       }
-    } catch (err) {
+    } catch {
       setError("Login gagal. Periksa email dan password Anda.");
     } finally {
       setIsLoading(false);
@@ -71,12 +70,13 @@ export function LoginForm({ onSuccess, isAdminLogin = false }: LoginFormProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <a
-                href="#"
-                className="text-sm text-blue-600 hover:text-blue-800"
+              <button
+                type="button"
+                className="text-sm text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
+                onClick={() => window.alert("Fitur reset password akan segera tersedia")}
               >
                 Lupa password?
-              </a>
+              </button>
             </div>
             <Input
               id="password"
@@ -100,9 +100,13 @@ export function LoginForm({ onSuccess, isAdminLogin = false }: LoginFormProps) {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm">
             Belum punya akun?{" "}
-            <a href="#" className="text-blue-600 hover:text-blue-800">
+            <button
+              type="button"
+              className="text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
+              onClick={() => router.push("/register")}
+            >
               Daftar sekarang
-            </a>
+            </button>
           </div>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

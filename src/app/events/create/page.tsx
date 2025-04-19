@@ -1,7 +1,7 @@
 "use client";
 
 import MainLayout from "@/components/layouts/MainLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, BookOpen, Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 

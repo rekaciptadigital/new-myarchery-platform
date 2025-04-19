@@ -347,9 +347,6 @@ export default function CreateTournamentPage() {
 
     // Simulate API call to create event
     setTimeout(() => {
-      // Generate a random ID for the new event
-      const eventId = Date.now().toString();
-      
       // In a real app, you would save this to your backend
       console.log("Creating event:", eventData);
       
@@ -660,7 +657,7 @@ export default function CreateTournamentPage() {
                   <div className="space-y-4">
                     <div className="text-sm font-medium">Harga Per Kategori</div>
                     {multiPricing.map((option, idx) => (
-                      <div key={idx} className="grid grid-cols-5 gap-2 items-center border-b pb-2">
+                      <div key={`pricing-${option.category.replace(/\s+/g, '-')}-${idx}`} className="grid grid-cols-5 gap-2 items-center border-b pb-2">
                         <div className="col-span-2">
                           <Input
                             value={option.category}
@@ -879,7 +876,7 @@ export default function CreateTournamentPage() {
                   <div className="space-y-4">
                     <div className="text-sm font-medium">Kuota Per Kategori</div>
                     {categoryQuotas.map((cat, idx) => (
-                      <div key={idx} className="grid grid-cols-2 gap-2 items-center border-b pb-2">
+                      <div key={`quota-${cat.category.replace(/\s+/g, '-')}-${idx}`} className="grid grid-cols-2 gap-2 items-center border-b pb-2">
                         <div className="text-sm">{cat.category}</div>
                         <Input
                           type="number"
@@ -917,7 +914,7 @@ export default function CreateTournamentPage() {
                 </div>
                 
                 {ageCategories.map((cat, idx) => (
-                  <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                  <div key={`age-category-${cat.name.replace(/\s+/g, '-')}-${idx}`} className="grid grid-cols-12 gap-2 items-center">
                     <div className="col-span-4">
                       <Input
                         value={cat.name}
@@ -1363,7 +1360,7 @@ export default function CreateTournamentPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {sponsors.map((sponsor, idx) => (
-                  <div key={idx} className="flex items-center justify-between border-b pb-2">
+                  <div key={`sponsor-${sponsor.name.replace(/\s+/g, '-')}-${sponsor.level}-${idx}`} className="flex items-center justify-between border-b pb-2">
                     <div>
                       <strong>{sponsor.name}</strong>
                       <div className="text-sm text-slate-500">Level: {sponsor.level}</div>

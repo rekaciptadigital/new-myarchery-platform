@@ -419,7 +419,7 @@ export default function ConfigureEventPage({ params }: { params: { eventId: stri
                 <div className="space-y-4">
                   <div className="text-sm font-medium">Harga Per Kategori</div>
                   {pricingOptions.map((option, idx) => (
-                    <div key={idx} className="grid grid-cols-3 gap-2 items-center border-b pb-2">
+                    <div key={`${option.category}-${idx}`} className="grid grid-cols-3 gap-2 items-center border-b pb-2">
                       <div className="text-sm">{option.category}</div>
                       <Input 
                         type="number" 
@@ -559,7 +559,7 @@ export default function ConfigureEventPage({ params }: { params: { eventId: stri
                 <div className="space-y-4">
                   <div className="text-sm font-medium">Kuota Per Kategori</div>
                   {event.quota.perCategory.map((cat, idx) => (
-                    <div key={idx} className="grid grid-cols-2 gap-2 items-center border-b pb-2">
+                    <div key={`${cat.category}-${idx}`} className="grid grid-cols-2 gap-2 items-center border-b pb-2">
                       <div className="text-sm">{cat.category}</div>
                       <Input 
                         type="number" 
@@ -591,7 +591,7 @@ export default function ConfigureEventPage({ params }: { params: { eventId: stri
               </div>
               
               {ageCategories.map((cat, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                <div key={`${cat.name}-${idx}`} className="grid grid-cols-12 gap-2 items-center">
                   <div className="col-span-4">{cat.name}</div>
                   <div className="col-span-3">{cat.minAge} tahun</div>
                   <div className="col-span-3">{cat.maxAge} tahun</div>
@@ -757,7 +757,7 @@ export default function ConfigureEventPage({ params }: { params: { eventId: stri
             </CardHeader>
             <CardContent className="space-y-4">
               {event.sponsors.map((sponsor, idx) => (
-                <div key={idx} className="flex items-center justify-between border-b pb-2">
+                <div key={`${sponsor.name}-${idx}`} className="flex items-center justify-between border-b pb-2">
                   <div>
                     <strong>{sponsor.name}</strong>
                     <div className="text-sm text-slate-500">Level: {sponsor.level}</div>

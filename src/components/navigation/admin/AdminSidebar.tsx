@@ -20,7 +20,8 @@ export default function AdminSidebar() {
     <aside className="w-64 bg-slate-800 text-white hidden md:flex flex-col min-h-screen">
       <div className="h-16 flex items-center px-6 border-b border-slate-700">
         <div className="font-bold text-xl tracking-tight flex items-center">
-          <span className="text-blue-400">My</span>Archery
+          <span className="text-blue-400">My</span>
+          <span>Archery</span>
           <span className="ml-2 text-xs px-2 py-1 bg-blue-600 rounded-sm">Admin</span>
         </div>
       </div>

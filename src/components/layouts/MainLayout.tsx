@@ -1,6 +1,6 @@
 import Sidebar from "@/components/navigation/Sidebar";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />

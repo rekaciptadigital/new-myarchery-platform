@@ -2,10 +2,9 @@
 
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ChevronRight, Plus, Users, MapPin, Tag } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 // Data dummy untuk event
 const events = [
@@ -52,6 +51,20 @@ const events = [
 ];
 
 export default function EventsPage() {
+  // Helper function to get status badge classes based on status
+  const getStatusBadgeClasses = (status: string) => {
+    switch (status) {
+      case 'Publikasi':
+        return 'bg-green-100 text-green-800';
+      case 'Draft':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Berlangsung':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-slate-100 text-slate-800';
+    }
+  };
+
   return (
     <MainLayout>
       <div className="flex justify-between items-center mb-6">
@@ -108,15 +121,7 @@ export default function EventsPage() {
                 <div className="mb-3 lg:mb-0">
                   <div className="flex items-center mb-2">
                     <h3 className="text-lg font-semibold">{event.name}</h3>
-                    <span className={`ml-3 text-xs px-2 py-1 rounded-full ${
-                      event.status === 'Publikasi' 
-                        ? 'bg-green-100 text-green-800' 
-                        : event.status === 'Draft' 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : event.status === 'Berlangsung' 
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-slate-100 text-slate-800'
-                    }`}>
+                    <span className={`ml-3 text-xs px-2 py-1 rounded-full ${getStatusBadgeClasses(event.status)}`}>
                       {event.status}
                     </span>
                   </div>

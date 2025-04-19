@@ -22,7 +22,8 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col min-h-screen">
       <div className="h-16 flex items-center justify-center font-bold text-xl tracking-tight border-b border-slate-200">
-        <span className="text-blue-600">My</span>Archery
+        <span className="text-blue-600">My</span>
+        <span>Archery</span>
         <span className="ml-2 text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-sm">Organizer</span>
       </div>
       <nav className="flex-1 py-4 overflow-y-auto">
