@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox"; // Add Checkbox import
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -43,9 +43,10 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
     }
   };
 
+  // Removed Card wrapper to match the screenshot design
   return (
-    <Card className="w-full max-w-md">
-      <div className="flex justify-center pt-6">
+    <div className="w-full max-w-sm space-y-6"> {/* Adjusted max-width and added spacing */}
+      <div className="flex justify-start mb-8"> {/* Align logo left and add margin */}
         <Image 
           src="/logos/logo_myarchery.svg" 
           alt="MyArchery Logo" 
@@ -54,88 +55,73 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
           priority
         />
       </div>
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          {isAdminLogin ? "Admin Login" : "Login"}
-        </CardTitle>
-        <CardDescription>
-          {isAdminLogin 
-            ? "Masuk sebagai administrator MyArchery" 
-            : "Masuk ke akun organizer MyArchery Anda"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+      
+      {/* Added Welcome back text */}
+      <div className="space-y-1">
+        <p className="text-sm text-slate-600">Welcome back</p>
+        <h1 className="text-2xl font-bold">Sign In To Your Account</h1>
+      </div>
+
+      {/* Removed CardHeader, CardContent, CardFooter */}
+      <form onSubmit={handleSubmit} className="space-y-5"> {/* Increased spacing */}
+        <div className="space-y-2">
+          {/* Removed Label, using placeholder as label */}
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter username or email" // Updated placeholder
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md" // Added styling
+          />
+        </div>
+        <div className="space-y-2">
+          {/* Removed Label, using placeholder as label */}
+          <Input
+            id="password"
+            type="password"
+            placeholder="Password" // Updated placeholder
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md" // Added styling
+          />
+        </div>
+
+        {/* Added Remember Me checkbox and Forgot Password link */} 
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-2">
+            <Checkbox id="remember-me" className="border-slate-300" />
+            <Label htmlFor="remember-me" className="font-normal text-slate-600">Remember Me</Label>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
-                onClick={() => window.alert("Fitur reset password akan segera tersedia")}
-              >
-                Lupa password?
-              </button>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <button
+            type="button"
+            className="font-medium text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
+            onClick={() => window.alert("Fitur reset password akan segera tersedia")}
+          >
+            Forgot your password?
+          </button>
+        </div>
+
+        {error && (
+          <div className="text-sm text-red-500 pt-1">
+            {error}
           </div>
-          {error && (
-            <div className="text-sm text-red-500">
-              {error}
-            </div>
-          )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Memproses..." : "Login"}
-          </Button>
-        </form>
-      </CardContent>
-      {!isAdminLogin && (
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm">
-            Belum punya akun?{" "}
-            <button
-              type="button"
-              className="text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
-              onClick={() => router.push("/register")}
-            >
-              Daftar sekarang
-            </button>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t"></span>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-500">Atau login dengan</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="w-full">
-              Google
-            </Button>
-            <Button variant="outline" className="w-full">
-              Apple
-            </Button>
-          </div>
-        </CardFooter>
-      )}
-    </Card>
+        )}
+
+        {/* Updated Login Button Style */}
+        <Button 
+          type="submit" 
+          className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-12 rounded-full text-sm tracking-wide" 
+          disabled={isLoading}
+        >
+          {isLoading ? "MEMPROSES..." : "LOGIN"} {/* Uppercase text */}
+        </Button>
+      </form>
+      
+      {/* Removed Register link and Social Logins to match screenshot */}
+      {/* {!isAdminLogin && ( ... )} */}
+    </div>
   );
 }
