@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface LoginFormProps {
   isAdminLogin?: boolean;
@@ -44,6 +45,15 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
 
   return (
     <Card className="w-full max-w-md">
+      <div className="flex justify-center pt-6">
+        <Image 
+          src="/logos/logo_myarchery.svg" 
+          alt="MyArchery Logo" 
+          width={180} 
+          height={50} 
+          priority
+        />
+      </div>
       <CardHeader>
         <CardTitle className="text-2xl">
           {isAdminLogin ? "Admin Login" : "Login"}
