@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MyArchery",
   description: "Archery Super Platform",
+  icons: {
+    icon: '/icon-myarchery.ico',
+  },
 };
 
 export default function RootLayout({
