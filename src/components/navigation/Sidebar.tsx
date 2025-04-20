@@ -88,8 +88,8 @@ function SidebarLogo({
     }`}>
       {isCollapsed ? (
         <Image 
-          src="/logos/logo_myarchery.svg" 
-          alt="MyArchery Logo" 
+          src="/icon-myarchery.ico" 
+          alt="MyArchery Icon" 
           width={24} 
           height={24} 
           className="object-contain"
