@@ -99,6 +99,19 @@ export default function CreateTournamentPage() {
   });
   const [ageCalculation, setAgeCalculation] = useState("event"); // event or range
 
+  // Format pertandingan
+  const [competitionFormat, setCompetitionFormat] = useState("standard"); // standard, fita, 720, indoor, field, 3d, flight, clout, custom
+  const [formatConfig, setFormatConfig] = useState({
+    rounds: "4", // untuk FITA standard
+    distances: ["70", "60", "50", "30"], // untuk FITA standard dan 720
+    customRoundEnabled: false, // untuk FITA custom round
+    customRound: "",
+    seriesCount: "2", // untuk format 720
+    indoorDistance: "18", // untuk indoor (18m atau 25m)
+    fieldTargetCount: "24", // untuk field archery
+    threeDTargetCount: "24", // untuk 3D archery
+  });
+
   // Delegation type
   const [delegationType, setDelegationType] = useState("all"); // all, country, club, province, city
   const [verifyDelegation, setVerifyDelegation] = useState(false);
@@ -315,6 +328,34 @@ export default function CreateTournamentPage() {
 
   const handleRemoveSponsor = (index: number) => {
     setSponsors(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFormatChange = (value: string) => {
+    setCompetitionFormat(value);
+  };
+
+  const handleFormatConfigChange = (field: string, value: string) => {
+    setFormatConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleDistanceChange = (index: number, value: string) => {
+    const updatedDistances = [...formatConfig.distances];
+    updatedDistances[index] = value;
+    setFormatConfig(prev => ({
+      ...prev,
+      distances: updatedDistances
+    }));
+  };
+
+  const handleCustomRoundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { checked } = e.target;
+    setFormatConfig(prev => ({
+      ...prev,
+      customRoundEnabled: checked
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1139,6 +1180,275 @@ export default function CreateTournamentPage() {
                     <input type="checkbox" id="autoPlace" className="checkbox" defaultChecked />
                     <label htmlFor="autoPlace" className="checkbox-label">Auto-penempatan peserta ke kategori berdasarkan tanggal lahir</label>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="card">
+                <CardHeader className="card-header">
+                  <CardTitle className="card-title">Format Pertandingan</CardTitle>
+                  <CardDescription className="card-description">Konfigurasi format pertandingan untuk tournament ini.</CardDescription>
+                </CardHeader>
+                <CardContent className="card-content">
+                  <div className="form-group">
+                    <Label className="form-label required">Format Pertandingan</Label>
+                    <Select
+                      value={competitionFormat}
+                      onValueChange={handleFormatChange}
+                    >
+                      <SelectTrigger className="select-trigger">
+                        <SelectValue placeholder="Pilih format pertandingan" />
+                      </SelectTrigger>
+                      <SelectContent className="select-content">
+                        <SelectItem value="standard">Standard (Basic Format)</SelectItem>
+                        <SelectItem value="fita">FITA Standard</SelectItem>
+                        <SelectItem value="720">Format 720</SelectItem>
+                        <SelectItem value="indoor">Indoor Round (18m/25m)</SelectItem>
+                        <SelectItem value="field">Field Archery</SelectItem>
+                        <SelectItem value="3d">3D Archery</SelectItem>
+                        <SelectItem value="flight">Flight Archery</SelectItem>
+                        <SelectItem value="clout">Clout Archery</SelectItem>
+                        <SelectItem value="custom">Format Kustom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* FITA Standard Format Settings */}
+                  {competitionFormat === "fita" && (
+                    <div className="mt-4">
+                      <div className="section-title">Pengaturan FITA Standard</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label htmlFor="rounds" className="form-label">Jumlah Ronde</Label>
+                        <Select
+                          value={formatConfig.rounds}
+                          onValueChange={(value) => handleFormatConfigChange("rounds", value)}
+                        >
+                          <SelectTrigger id="rounds" className="select-trigger">
+                            <SelectValue placeholder="Pilih jumlah ronde" />
+                          </SelectTrigger>
+                          <SelectContent className="select-content">
+                            <SelectItem value="1">1 Ronde</SelectItem>
+                            <SelectItem value="2">2 Ronde</SelectItem>
+                            <SelectItem value="3">3 Ronde</SelectItem>
+                            <SelectItem value="4">4 Ronde (Standard)</SelectItem>
+                            <SelectItem value="6">6 Ronde</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="divider mt-4"></div>
+                      <div className="section-title">Jarak Tembak</div>
+                      <div className="grid-2 gap-4 mt-3">
+                        {formatConfig.distances.slice(0, parseInt(formatConfig.rounds)).map((distance, idx) => (
+                          <div className="form-group" key={`distance-${idx}`}>
+                            <Label htmlFor={`distance-${idx}`} className="form-label">Jarak Ronde {idx + 1} (meter)</Label>
+                            <Input
+                              id={`distance-${idx}`}
+                              type="number"
+                              value={distance}
+                              onChange={(e) => handleDistanceChange(idx, e.target.value)}
+                              className="form-input"
+                              min="1"
+                              max="90"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="checkbox-group mt-4">
+                        <input
+                          type="checkbox"
+                          id="customRound"
+                          checked={formatConfig.customRoundEnabled}
+                          onChange={handleCustomRoundChange}
+                          className="checkbox"
+                        />
+                        <label htmlFor="customRound" className="checkbox-label">Aktifkan Custom Round</label>
+                      </div>
+                      
+                      {formatConfig.customRoundEnabled && (
+                        <div className="form-group mt-3">
+                          <Label htmlFor="customRoundDesc" className="form-label">Deskripsi Custom Round</Label>
+                          <Textarea
+                            id="customRoundDesc"
+                            value={formatConfig.customRound}
+                            onChange={(e) => handleFormatConfigChange("customRound", e.target.value)}
+                            placeholder="Contoh: FITA Double Round (2x70m) + Elimination Round"
+                            rows={3}
+                            className="form-textarea"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Format 720 Settings */}
+                  {competitionFormat === "720" && (
+                    <div className="mt-4">
+                      <div className="section-title">Pengaturan Format 720</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label htmlFor="seriesCount" className="form-label">Jumlah Seri</Label>
+                        <Select
+                          value={formatConfig.seriesCount}
+                          onValueChange={(value) => handleFormatConfigChange("seriesCount", value)}
+                        >
+                          <SelectTrigger id="seriesCount" className="select-trigger">
+                            <SelectValue placeholder="Pilih jumlah seri" />
+                          </SelectTrigger>
+                          <SelectContent className="select-content">
+                            <SelectItem value="1">1 Seri (36 anak panah)</SelectItem>
+                            <SelectItem value="2">2 Seri (72 anak panah, standard)</SelectItem>
+                            <SelectItem value="3">3 Seri (108 anak panah)</SelectItem>
+                            <SelectItem value="4">4 Seri (144 anak panah)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="form-group mt-3">
+                        <Label htmlFor="distance720" className="form-label">Jarak Tembak (meter)</Label>
+                        <Input
+                          id="distance720"
+                          type="number"
+                          value={formatConfig.distances[0]}
+                          onChange={(e) => handleDistanceChange(0, e.target.value)}
+                          className="form-input"
+                          min="1"
+                          max="90"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Indoor Format Settings */}
+                  {competitionFormat === "indoor" && (
+                    <div className="mt-4">
+                      <div className="section-title">Pengaturan Indoor Round</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label className="form-label">Jarak Tembak</Label>
+                        <div className="radio-group">
+                          <div className="checkbox-group">
+                            <input
+                              type="radio"
+                              id="indoor18m"
+                              name="indoorDistance"
+                              value="18"
+                              checked={formatConfig.indoorDistance === "18"}
+                              onChange={(e) => handleFormatConfigChange("indoorDistance", e.target.value)}
+                              className="radio"
+                            />
+                            <label htmlFor="indoor18m" className="radio-label">18 meter</label>
+                          </div>
+                          <div className="checkbox-group">
+                            <input
+                              type="radio"
+                              id="indoor25m"
+                              name="indoorDistance"
+                              value="25"
+                              checked={formatConfig.indoorDistance === "25"}
+                              onChange={(e) => handleFormatConfigChange("indoorDistance", e.target.value)}
+                              className="radio"
+                            />
+                            <label htmlFor="indoor25m" className="radio-label">25 meter</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Field Archery Settings */}
+                  {competitionFormat === "field" && (
+                    <div className="mt-4">
+                      <div className="section-title">Pengaturan Field Archery</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label htmlFor="fieldTargetCount" className="form-label">Jumlah Target</Label>
+                        <Select
+                          value={formatConfig.fieldTargetCount}
+                          onValueChange={(value) => handleFormatConfigChange("fieldTargetCount", value)}
+                        >
+                          <SelectTrigger id="fieldTargetCount" className="select-trigger">
+                            <SelectValue placeholder="Pilih jumlah target" />
+                          </SelectTrigger>
+                          <SelectContent className="select-content">
+                            <SelectItem value="12">12 Target</SelectItem>
+                            <SelectItem value="24">24 Target (Standard)</SelectItem>
+                            <SelectItem value="28">28 Target</SelectItem>
+                            <SelectItem value="32">32 Target</SelectItem>
+                            <SelectItem value="48">48 Target (2 Courses)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3D Archery Settings */}
+                  {competitionFormat === "3d" && (
+                    <div className="mt-4">
+                      <div className="section-title">Pengaturan 3D Archery</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label htmlFor="threeDTargetCount" className="form-label">Jumlah Target</Label>
+                        <Select
+                          value={formatConfig.threeDTargetCount}
+                          onValueChange={(value) => handleFormatConfigChange("threeDTargetCount", value)}
+                        >
+                          <SelectTrigger id="threeDTargetCount" className="select-trigger">
+                            <SelectValue placeholder="Pilih jumlah target" />
+                          </SelectTrigger>
+                          <SelectContent className="select-content">
+                            <SelectItem value="12">12 Target</SelectItem>
+                            <SelectItem value="20">20 Target</SelectItem>
+                            <SelectItem value="24">24 Target (Standard)</SelectItem>
+                            <SelectItem value="28">28 Target</SelectItem>
+                            <SelectItem value="40">40 Target (2 Courses)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Flight & Clout Archery (Simple Settings) */}
+                  {(competitionFormat === "flight" || competitionFormat === "clout") && (
+                    <div className="mt-4">
+                      <div className="section-title">Pengaturan {competitionFormat === "flight" ? "Flight" : "Clout"} Archery</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label htmlFor="customFormatDesc" className="form-label">Deskripsi Format Pertandingan</Label>
+                        <Textarea
+                          id="customFormatDesc"
+                          value={formatConfig.customRound}
+                          onChange={(e) => handleFormatConfigChange("customRound", e.target.value)}
+                          placeholder={`Jelaskan detil format ${competitionFormat === "flight" ? "Flight" : "Clout"} Archery yang akan digunakan...`}
+                          rows={4}
+                          className="form-textarea"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Format */}
+                  {competitionFormat === "custom" && (
+                    <div className="mt-4">
+                      <div className="section-title">Format Kustom</div>
+                      
+                      <div className="form-group mt-3">
+                        <Label htmlFor="customFormatDesc" className="form-label">Deskripsi Format Pertandingan</Label>
+                        <Textarea
+                          id="customFormatDesc"
+                          value={formatConfig.customRound}
+                          onChange={(e) => handleFormatConfigChange("customRound", e.target.value)}
+                          placeholder="Jelaskan detil format pertandingan yang akan digunakan..."
+                          rows={4}
+                          className="form-textarea"
+                        />
+                        <span className="helper-text">
+                          Deskripsikan secara detail bagaimana format pertandingan akan dilakukan, termasuk jumlah anak panah, jarak tembak, sistem penilaian, dsb.
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
