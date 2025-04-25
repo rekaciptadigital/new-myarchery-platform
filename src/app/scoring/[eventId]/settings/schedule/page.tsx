@@ -1,14 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, ChevronLeft, Plus, Save, X } from "lucide-react";
 import Link from "next/link";
 import { useParams } from 'next/navigation';
-import { useState } from "react";
+import { useState } from "react"; // Remove use import
 import MainLayout from "@/components/layouts/MainLayout";
 
 // Define activity type options for schedule
@@ -45,9 +45,9 @@ const genderOptions = [
 ];
 
 export default function ScheduleSettingsPage() {
-  // Use the useParams hook instead of receiving params directly
-  const routeParams = useParams();
-  const eventId = routeParams.eventId as string;
+  // Access params directly without using React.use()
+  const params = useParams();
+  const eventId = params.eventId as string;
 
   // --------- Schedule Settings State ---------
   const [schedules, setSchedules] = useState<Array<{
@@ -143,14 +143,25 @@ export default function ScheduleSettingsPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Link href={`/scoring/${eventId}/settings`} className="text-slate-600 hover:text-slate-900">
-            <ChevronLeft size={20} />
-          </Link>
-          <h1 className="text-2xl font-bold">Pengaturan Jadwal</h1>
+      {/* Struktur header dengan tombol di kanan atas */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Link href={`/scoring/${eventId}/settings`} className="text-slate-600 hover:text-slate-900">
+              <ChevronLeft size={20} />
+            </Link>
+            <h1 className="text-2xl font-bold">Pengaturan Jadwal</h1>
+          </div>
+          <p className="text-slate-600">Atur jadwal pertandingan untuk setiap kategori</p>
         </div>
-        <p className="text-slate-600">Atur jadwal spesifik untuk berbagai aktivitas dalam pertandingan</p>
+        <div className="flex gap-4">
+          <Link href={`/scoring/${eventId}/settings`}>
+            <Button variant="outline">Kembali</Button>
+          </Link>
+          <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
+            <Save size={16} className="mr-2" /> Simpan
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -298,16 +309,6 @@ export default function ScheduleSettingsPage() {
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end border-t pt-4">
-          <div className="flex gap-4">
-            <Link href={`/scoring/${eventId}/settings`}>
-              <Button variant="outline">Kembali</Button>
-            </Link>
-            <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
-              <Save size={16} className="mr-2" /> Simpan Pengaturan Jadwal
-            </Button>
-          </div>
-        </CardFooter>
       </Card>
     </MainLayout>
   );

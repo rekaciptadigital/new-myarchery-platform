@@ -3,25 +3,27 @@
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, Calendar, Target, Info, Settings } from "lucide-react";
+import { Calendar, Target, Info, Settings } from "lucide-react";
 import Link from "next/link";
 import { useParams } from 'next/navigation';
 
 export default function ScoringSettingsPage() {
-  // Use the useParams hook instead of receiving params directly
   const params = useParams();
   const eventId = params.eventId as string;
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Link href={`/scoring/${eventId}/dashboard`} className="text-slate-600 hover:text-slate-900">
-            <ChevronLeft size={20} />
-          </Link>
-          <h1 className="text-2xl font-bold">Pengaturan Pertandingan</h1>
+      {/* Struktur header dengan tombol kembali di kanan atas */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Pengaturan Pertandingan</h1>
+          <p className="text-slate-600">Konfigurasi berbagai aspek pertandingan</p>
         </div>
-        <p className="text-slate-600">Konfigurasi jadwal, bracket, FOP, dan bantalan untuk event dengan ID: {eventId}</p>
+        <div className="flex gap-4">
+          <Link href={`/scoring/${eventId}/dashboard`}>
+            <Button variant="outline">Kembali</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -128,12 +130,6 @@ export default function ScoringSettingsPage() {
             </Link>
           </CardFooter>
         </Card>
-      </div>
-
-      <div className="flex justify-end my-10">
-        <Link href={`/scoring/${eventId}/dashboard`}>
-          <Button variant="outline">Kembali</Button>
-        </Link>
       </div>
     </MainLayout>
   );

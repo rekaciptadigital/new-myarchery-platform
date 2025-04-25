@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Target, ChevronLeft, Plus, Save, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import MainLayout from "@/components/layouts/MainLayout";
 
 // Mock categories for selection
@@ -19,7 +20,11 @@ const categories = [
   { id: 6, name: "Barebow Women", gender: "Women", distance: "50m" }
 ];
 
-export default function TargetSettingsPage({ params }: { params: { eventId: string } }) {
+export default function TargetSettingsPage() {
+  // Use useParams() directly with type assertion instead of props and use()
+  const params = useParams();
+  const eventId = params.eventId as string;
+  
   // --------- Target Settings State ---------
   const [targetSettings, setTargetSettings] = useState({
     totalTargets: 30,
@@ -87,14 +92,25 @@ export default function TargetSettingsPage({ params }: { params: { eventId: stri
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Link href={`/scoring/${params.eventId}/settings`} className="text-slate-600 hover:text-slate-900">
-            <ChevronLeft size={20} />
-          </Link>
-          <h1 className="text-2xl font-bold">Pengaturan Bantalan</h1>
+      {/* Struktur header dengan tombol di kanan atas */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Link href={`/scoring/${eventId}/settings`} className="text-slate-600 hover:text-slate-900">
+              <ChevronLeft size={20} />
+            </Link>
+            <h1 className="text-2xl font-bold">Pengaturan Bantalan</h1>
+          </div>
+          <p className="text-slate-600">Atur jumlah dan distribusi bantalan untuk setiap kategori dan hari pertandingan</p>
         </div>
-        <p className="text-slate-600">Atur jumlah dan distribusi bantalan untuk setiap kategori dan hari pertandingan</p>
+        <div className="flex gap-4">
+          <Link href={`/scoring/${eventId}/settings`}>
+            <Button variant="outline">Kembali</Button>
+          </Link>
+          <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
+            <Save size={16} className="mr-2" /> Simpan
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -230,16 +246,6 @@ export default function TargetSettingsPage({ params }: { params: { eventId: stri
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end border-t pt-4">
-          <div className="flex gap-4">
-            <Link href={`/scoring/${params.eventId}/settings`}>
-              <Button variant="outline">Kembali</Button>
-            </Link>
-            <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
-              <Save size={16} className="mr-2" /> Simpan Pengaturan Bantalan
-            </Button>
-          </div>
-        </CardFooter>
       </Card>
     </MainLayout>
   );

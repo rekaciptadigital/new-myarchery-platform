@@ -1,30 +1,30 @@
 "use client";
 
+import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Info, ChevronLeft, Save } from "lucide-react";
+import { ChevronLeft, Info, Save } from "lucide-react";
 import Link from "next/link";
-import { useParams } from 'next/navigation';
-import { useState } from "react";
-import MainLayout from "@/components/layouts/MainLayout";
+import { useParams } from "next/navigation";
+import { useState } from "react"; // Remove use import
 
-// Mock FOP (Field of Play) layouts
+// Data dummy untuk layout options
 const fopLayouts = [
-  { value: "standard", label: "Standard (2 baris)" },
-  { value: "single", label: "Single Row" },
-  { value: "double", label: "Double Row" },
-  { value: "square", label: "Square Formation" },
-  { value: "custom", label: "Custom Layout" }
+  { value: "standard", label: "Standard (1 baris)" },
+  { value: "double", label: "Double Row (2 baris)" },
+  { value: "triple", label: "Triple Row (3 baris)" },
+  { value: "quad", label: "Quad Row (4 baris)" },
+  { value: "custom", label: "Custom" },
 ];
 
 export default function FOPSettingsPage() {
-  // Use the useParams hook instead of receiving params directly
-  const routeParams = useParams();
-  const eventId = routeParams.eventId as string;
+  // Access params directly without using React.use()
+  const params = useParams();
+  const eventId = params.eventId as string;
 
   // --------- FOP Settings State ---------
   const [fopSettings, setFopSettings] = useState({
@@ -46,15 +46,23 @@ export default function FOPSettingsPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center gap-2 mb-1">
           <Link href={`/scoring/${eventId}/settings`} className="text-slate-600 hover:text-slate-900">
             <ChevronLeft size={20} />
           </Link>
           <h1 className="text-2xl font-bold">Pengaturan Field of Play</h1>
         </div>
-        <p className="text-slate-600">Konfigurasi layout lapangan untuk pertandingan</p>
+        <div className="flex gap-4">
+          <Link href={`/scoring/${eventId}/settings`}>
+            <Button variant="outline">Kembali</Button>
+          </Link>
+          <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
+            <Save size={16} className="mr-2" /> Simpan
+          </Button>
+        </div>
       </div>
+      <p className="text-slate-600 mb-6">Konfigurasi layout lapangan untuk pertandingan</p>
 
       <Card>
         <CardHeader>
@@ -128,40 +136,12 @@ export default function FOPSettingsPage() {
               <h3 className="text-sm font-medium mb-3">Preview FOP Layout</h3>
               <div className="aspect-[4/3] bg-white border rounded-md flex items-center justify-center">
                 {fopSettings.layout === "standard" && (
-                  <div className="text-center p-4">
-                    <div className="flex gap-4 mb-4 justify-center">
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("standard", 1, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
-                        >
-                          {idx + 1}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-4 justify-center">
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("standard", 2, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
-                        >
-                          {idx + 6}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-8 border-t border-dashed border-gray-400 pt-2 text-xs text-gray-500">
-                      Shooting line
-                    </div>
-                  </div>
-                )}
-                
-                {fopSettings.layout === "single" && (
-                  <div className="text-center p-4">
-                    <div className="flex gap-4 justify-center">
-                      {Array.from({ length: 10 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("single", 1, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
+                  <div className="text-center">
+                    <div className="mb-10 grid grid-cols-12 gap-2">
+                      {Array.from({ length: 12 }).map((_, idx) => (
+                        <div
+                          key={getTargetKey("standard", 1, idx + 1)}
+                          className="h-10 w-10 rounded-full bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-xs font-medium"
                         >
                           {idx + 1}
                         </div>
@@ -174,60 +154,22 @@ export default function FOPSettingsPage() {
                 )}
                 
                 {fopSettings.layout === "double" && (
-                  <div className="text-center p-4">
-                    <div className="flex gap-4 mb-4 justify-center">
-                      {Array.from({ length: 6 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("double", 1, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
+                  <div className="text-center">
+                    <div className="mb-6 grid grid-cols-8 gap-2">
+                      {Array.from({ length: 8 }).map((_, idx) => (
+                        <div
+                          key={getTargetKey("double", 1, idx + 1)}
+                          className="h-10 w-10 rounded-full bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-xs font-medium"
                         >
                           {idx + 1}
                         </div>
                       ))}
                     </div>
-                    <div className="flex gap-4 justify-center">
-                      {Array.from({ length: 6 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("double", 2, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
-                        >
-                          {idx + 7}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-8 border-t border-dashed border-gray-400 pt-2 text-xs text-gray-500">
-                      Shooting line
-                    </div>
-                  </div>
-                )}
-                
-                {fopSettings.layout === "square" && (
-                  <div className="text-center p-4">
-                    <div className="flex gap-4 mb-4 justify-center">
-                      {Array.from({ length: 4 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("square", 1, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
-                        >
-                          {idx + 1}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-4 mb-4 justify-center">
-                      {Array.from({ length: 4 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("square", 2, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
-                        >
-                          {idx + 5}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-4 justify-center">
-                      {Array.from({ length: 4 }).map((_, idx) => (
-                        <div 
-                          key={getTargetKey("square", 3, idx + 1)} 
-                          className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-xs"
+                    <div className="mb-10 grid grid-cols-8 gap-2">
+                      {Array.from({ length: 8 }).map((_, idx) => (
+                        <div
+                          key={getTargetKey("double", 2, idx + 9)}
+                          className="h-10 w-10 rounded-full bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-xs font-medium"
                         >
                           {idx + 9}
                         </div>
@@ -249,16 +191,6 @@ export default function FOPSettingsPage() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end border-t pt-4">
-          <div className="flex gap-4">
-            <Link href={`/scoring/${eventId}/settings`}>
-              <Button variant="outline">Kembali</Button>
-            </Link>
-            <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
-              <Save size={16} className="mr-2" /> Simpan Pengaturan FOP
-            </Button>
-          </div>
-        </CardFooter>
       </Card>
     </MainLayout>
   );

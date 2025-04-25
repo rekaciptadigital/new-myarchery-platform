@@ -71,8 +71,10 @@ const currencies = [
   { value: "MYR", label: "MYR - Malaysian Ringgit" }
 ];
 
-export default function ConfigureEventPage({ params }: { params: { eventId: string } }) {
-  // In a real app, you would fetch event data based on params.eventId
+export default function ConfigureEventPage() {
+  // Use useParams() directly with type assertion instead of props and use()
+  
+  // In a real app, you would fetch event data based on eventId
   const [event, setEvent] = useState(dummyEvent);
   
   // Basic info
@@ -185,9 +187,15 @@ export default function ConfigureEventPage({ params }: { params: { eventId: stri
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Konfigurasi Event: {basicInfo.name}</h1>
-        <p className="text-slate-600">Atur semua detail untuk event dengan ID: {params.eventId}</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Konfigurasi Event</h1>
+          <p className="text-slate-600">Atur dan kelola detail event &quot;{event.name}&quot;</p>
+        </div>
+        <div className="flex gap-4">
+          <Button variant="outline">Batal</Button>
+          <Button onClick={handleSaveConfiguration}>Simpan Konfigurasi</Button>
+        </div>
       </div>
 
       <Tabs defaultValue="basic" className="mb-8">
@@ -798,11 +806,6 @@ export default function ConfigureEventPage({ params }: { params: { eventId: stri
           </Card>
         </TabsContent>
       </Tabs>
-
-      <div className="flex justify-end gap-4 mb-10">
-        <Button variant="outline">Batal</Button>
-        <Button onClick={handleSaveConfiguration}>Simpan Konfigurasi</Button>
-      </div>
     </MainLayout>
   );
 }

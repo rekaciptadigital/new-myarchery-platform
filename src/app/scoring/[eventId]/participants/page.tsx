@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ArrowLeft,
   ArrowUpDown,
   ChevronLeft, 
   ChevronRight, 
@@ -20,8 +19,7 @@ import {
   X 
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; // Remove use import
 import {
   Dialog,
   DialogContent,
@@ -486,7 +484,7 @@ const filterTeamsData = <T extends typeof teams[0] | typeof mixTeams[0]>(
 };
 
 export default function ParticipantsPage() {
-  const params = useParams();
+  
   const [activeTab, setActiveTab] = useState("individual");
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -699,19 +697,21 @@ export default function ParticipantsPage() {
 
   return (
     <MainLayout>
-      {/* Header with back button */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link 
-          href={`/scoring/${params.eventId}/dashboard`}
-          className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-slate-100"
-        >
-          <ArrowLeft size={20} className="text-slate-600" />
-        </Link>
+      {/* Header dengan tombol di kanan atas */}
+      <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Daftar Peserta</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {eventDetails.name} • {eventDetails.date}
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            <Link href={`/scoring/${eventDetails.id}`} className="text-slate-600 hover:text-slate-900">
+              <ChevronLeft size={20} />
+            </Link>
+            <h1 className="text-2xl font-bold">Daftar Peserta</h1>
+          </div>
+          <p className="text-slate-600">Kelola peserta individu, team dan mix team</p>
+        </div>
+        <div className="flex gap-4">
+          <Link href={`/scoring/${eventDetails.id}`}>
+            <Button variant="outline">Kembali</Button>
+          </Link>
         </div>
       </div>
       

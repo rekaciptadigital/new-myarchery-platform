@@ -739,3 +739,67 @@ body .css-tournament-form .tabs-content {
 body .tournament-form-container :is([data-radix-select-content], [data-radix-popper-content-wrapper], [role="listbox"]) * {
   background-color: white !important;
 }
+
+/* Enhanced cursor and interactive element styles */
+button, 
+[role="button"],
+a,
+.button,
+.interactive,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+.select-trigger,
+.dialog-trigger,
+.dropdown-trigger,
+.sidebar-toggle-btn {
+  cursor: pointer !important;
+}
+
+/* Make sure buttons inside sidebar maintain their original size */
+.sidebar-nav button,
+.sidebar button,
+aside button,
+.sidebar-toggle-btn {
+  transform: none !important;
+  scale: none !important;
+}
+
+/* Hover effect for sidebar toggle button specifically */
+.sidebar-toggle-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  transition: background-color 0.15s ease;
+}
+
+/* Improve hover state for sidebar toggle buttons */
+.sidebar-toggle-btn:active {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  transition: none;
+}
+
+/* Disabled elements show not-allowed cursor */
+button:disabled,
+a.disabled,
+.button.disabled,
+[role="button"][aria-disabled="true"],
+input:disabled,
+select:disabled {
+  cursor: not-allowed !important;
+}
+
+/* Add subtle animation for clickable elements */
+@keyframes button-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+button:active:not(:disabled):not(.sidebar button):not(aside button),
+.button:active:not(.disabled),
+[role="button"]:active:not([aria-disabled="true"]),
+input[type="submit"]:active:not(:disabled),
+input[type="button"]:active:not(:disabled),
+input[type="reset"]:active:not(:disabled) {
+  animation: button-press 0.2s ease;
+}

@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { ChevronLeft, Calendar, Target, Plus, X, Save } from "lucide-react";
-import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Calendar, Target, Plus, X, Save } from "lucide-react";
 
 // Define activity type options for schedule
 const activityTypes = [
@@ -52,7 +52,11 @@ const genderOptions = [
   { value: "Mixed", label: "Mixed" }
 ];
 
-export default function CompetitionSettingsPage({ params }: { params: { eventId: string } }) {
+export default function CompetitionSettingsPage() {
+  // Use useParams() directly with type assertion instead of props and use()
+  const params = useParams();
+  const eventId = params.eventId as string;
+  
   // Schedule Settings State
   const [schedules, setSchedules] = useState<Array<{
     id: string; // Add unique ID
@@ -258,14 +262,17 @@ export default function CompetitionSettingsPage({ params }: { params: { eventId:
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Link href={`/events/${params.eventId}/configure`} className="text-slate-600 hover:text-slate-900">
-            <ChevronLeft size={20} />
-          </Link>
-          <h1 className="text-2xl font-bold">Pengaturan Pertandingan</h1>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Pengaturan Kompetisi</h1>
+          <p className="text-slate-600">Konfigurasi jadwal, bantalan, dan bracket untuk event &quot;{eventId}&quot;</p>
         </div>
-        <p className="text-slate-600">Konfigurasi jadwal, bracket, dan bantalan untuk event dengan ID: {params.eventId}</p>
+        <div className="flex gap-4">
+          <Button variant="outline">Batal</Button>
+          <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
+            <Save size={16} className="mr-2" /> Simpan Pengaturan
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-8 mb-10">
@@ -677,13 +684,6 @@ export default function CompetitionSettingsPage({ params }: { params: { eventId:
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="flex justify-end gap-4 mb-10 sticky bottom-4 bg-white p-4 shadow rounded-md">
-        <Button variant="outline">Batal</Button>
-        <Button onClick={handleSaveSettings} className="bg-green-600 hover:bg-green-700">
-          <Save size={16} className="mr-2" /> Simpan Pengaturan
-        </Button>
       </div>
     </MainLayout>
   );

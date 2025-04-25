@@ -61,7 +61,7 @@ function SidebarToggleButton({
     <button 
       className={`absolute -right-3 top-20 bg-white rounded-full p-1 border border-slate-200 shadow-sm 
         ${isHidden && !isHovering ? "opacity-0" : "opacity-100"}
-        ${transitionClasses} hover:bg-slate-50 z-50`}
+        ${transitionClasses} hover:bg-slate-50 z-50 sidebar-toggle-btn`}
       onClick={onToggle}
       aria-label={getToggleAriaLabel()}
     >
@@ -206,7 +206,7 @@ function MobileMenuButton({
 }>) {
   return (
     <button 
-      className="fixed top-4 left-4 p-2 bg-white rounded-md shadow-md z-50 md:hidden"
+      className="fixed top-4 left-4 p-2 bg-white rounded-md shadow-md z-50 md:hidden sidebar-toggle-btn"
       onClick={() => {
         setIsCollapsed(false);
         setIsHidden(!isHidden);
