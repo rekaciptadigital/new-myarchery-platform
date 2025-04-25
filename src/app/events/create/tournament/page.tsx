@@ -1240,7 +1240,7 @@ export default function CreateTournamentPage() {
                       <div className="section-title">Jarak Tembak</div>
                       <div className="grid-2 gap-4 mt-3">
                         {formatConfig.distances.slice(0, parseInt(formatConfig.rounds)).map((distance, idx) => (
-                          <div className="form-group" key={`distance-${idx}`}>
+                          <div className="form-group" key={`distance-round-${idx+1}-${distance}`}>
                             <Label htmlFor={`distance-${idx}`} className="form-label">Jarak Ronde {idx + 1} (meter)</Label>
                             <Input
                               id={`distance-${idx}`}

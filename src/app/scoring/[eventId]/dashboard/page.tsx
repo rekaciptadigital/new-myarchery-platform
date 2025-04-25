@@ -87,12 +87,56 @@ const scoringMenus = [
   },
 ];
 
-// Top statistics untuk overview
+// Top statistics untuk overview - Add more detailed information
 const scoringStatistics = [
-  { id: "active-participants", title: "Peserta Aktif", value: 72, icon: <Users className="h-5 w-5 text-blue-600" /> },
-  { id: "categories", title: "Kategori", value: 8, icon: <Flag className="h-5 w-5 text-green-600" /> },
-  { id: "targets", title: "Bantalan", value: 24, icon: <LucideTarget className="h-5 w-5 text-amber-600" /> },
-  { id: "active-judges", title: "Juri Aktif", value: 12, icon: <UserCog className="h-5 w-5 text-purple-600" /> },
+  { 
+    id: "active-participants", 
+    title: "Peserta Aktif", 
+    value: 72, 
+    secondaryInfo: "dari 128 terdaftar",
+    trend: "+3 dari kemarin",
+    trendUp: true,
+    icon: <Users className="h-5 w-5 text-blue-600" />,
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    textColor: "text-blue-700"
+  },
+  { 
+    id: "categories", 
+    title: "Kategori", 
+    value: 8, 
+    secondaryInfo: "Recurve terpopuler",
+    trend: "6 aktif hari ini",
+    trendUp: true,
+    icon: <Flag className="h-5 w-5 text-green-600" />,
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
+    textColor: "text-green-700"
+  },
+  { 
+    id: "targets", 
+    title: "Bantalan", 
+    value: 24, 
+    secondaryInfo: "16 sedang digunakan",
+    trend: "8 tersedia",
+    trendUp: null,
+    icon: <LucideTarget className="h-5 w-5 text-amber-600" />,
+    bgColor: "bg-amber-50",
+    borderColor: "border-amber-200",
+    textColor: "text-amber-700"
+  },
+  { 
+    id: "active-judges", 
+    title: "Juri Aktif", 
+    value: 12, 
+    secondaryInfo: "4 sesi terjadwal",
+    trend: "3 pending konfirmasi",
+    trendUp: false,
+    icon: <UserCog className="h-5 w-5 text-purple-600" />,
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
+    textColor: "text-purple-700"
+  },
 ];
 
 // Data dummy untuk top scores
@@ -216,25 +260,48 @@ export default function ScoringDashboardPage() {
 
       {/* Desktop View */}
       <div className="hidden md:flex flex-col space-y-6">
-        {/* Quick Statistics */}
+        {/* Section Title for Quick Statistics */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-800">Overview Pertandingan</h2>
+          <p className="text-sm text-slate-500">Terakhir diperbarui: {new Date().toLocaleTimeString()}</p>
+        </div>
+        
+        {/* Quick Statistics - Compact version with consistent color */}
         <div className="grid grid-cols-4 gap-4">
           {scoringStatistics.map(stat => (
-            <Card key={stat.id}>
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                  {stat.icon}
+            <Card key={stat.id} className="bg-slate-50 border border-slate-200">
+              <CardContent className="py-2 px-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">{stat.title}</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-xl font-bold text-slate-800">{stat.value}</p>
+                      <p className="text-xs text-slate-500">{stat.secondaryInfo}</p>
+                    </div>
+                  </div>
+                  <div className={`h-8 w-8 rounded-full ${stat.bgColor} flex items-center justify-center`}>
+                    {stat.icon}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500">{stat.title}</p>
-                  <p className="text-xl font-bold">{stat.value}</p>
+                <div className="mt-1 text-xs text-slate-500 flex items-center">
+                  {stat.trendUp !== null && (
+                    <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1 ${stat.trendUp ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  )}
+                  {stat.trend}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
+        {/* Section Title for Main Menu */}
+        <div className="pt-2">
+          <h2 className="text-lg font-semibold text-slate-800">Manajemen Pertandingan</h2>
+          <p className="text-sm text-slate-500 mt-1">Pilih menu untuk mengelola berbagai aspek pertandingan</p>
+        </div>
+        
         {/* Main Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {scoringMenus.map(menu => (
             <Card key={menu.id} className={`${menu.color} hover:shadow-md transition-shadow`}>
               <CardContent className="p-4 flex items-center justify-between">
@@ -261,6 +328,12 @@ export default function ScoringDashboardPage() {
           ))}
         </div>
 
+        {/* Section Title for Analysis */}
+        <div className="pt-2">
+          <h2 className="text-lg font-semibold text-slate-800">Analisis & Jadwal</h2>
+          <p className="text-sm text-slate-500 mt-1">Pantau performa peserta dan jadwal pertandingan mendatang</p>
+        </div>
+        
         {/* Bottom Row: Top Scores & Upcoming Matches */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Top Scores */}

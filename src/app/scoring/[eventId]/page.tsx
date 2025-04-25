@@ -225,7 +225,7 @@ export default function EventScoringPage() {
 
   // Navigasi ke dashboard scoring
   const router = useRouter();
-  const { id: eventId } = useParams();
+  const { eventId } = useParams();
   const navigateToDashboard = () => {
     router.push(`/scoring/${eventId}/dashboard`);
   };
@@ -639,10 +639,16 @@ export default function EventScoringPage() {
       {/* Footer Action Buttons */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Settings size={14} className="mr-1" />
-            Pengaturan Scoring
-          </Button>
+          <Link href={`/scoring/${eventId}/settings`}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center"
+            >
+              <Settings size={14} className="mr-1" />
+              Pengaturan Pertandingan
+            </Button>
+          </Link>
           
           <Button variant="outline" size="sm">
             <Calendar size={14} className="mr-1" />
