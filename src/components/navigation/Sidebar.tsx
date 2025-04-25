@@ -35,7 +35,7 @@ function SidebarToggleButton({
 
   // Separate methods for each state to determine icon
   const getExpandedStateIcon = () => <ChevronLeft size={16} />;
-  const getCollapsedStateIcon = () => <ChevronLeft size={16} className="rotate-180" />;
+  const getCollapsedStateIcon = () => <ChevronRight size={16} />;
   const getHiddenStateIcon = () => <ChevronRight size={16} />;
 
   // Separate methods for each state to determine aria-label
@@ -59,9 +59,9 @@ function SidebarToggleButton({
 
   return (
     <button 
-      className={`absolute -right-3 top-20 bg-white rounded-full p-1 border border-slate-200 shadow-sm ${
-        isHidden && !isHovering ? "opacity-0" : "opacity-100"
-      } ${transitionClasses} hover:bg-slate-50`}
+      className={`absolute -right-3 top-20 bg-white rounded-full p-1 border border-slate-200 shadow-sm 
+        ${isHidden && !isHovering ? "opacity-0" : "opacity-100"}
+        ${transitionClasses} hover:bg-slate-50 z-50`}
       onClick={onToggle}
       aria-label={getToggleAriaLabel()}
     >
@@ -221,6 +221,17 @@ export default function Sidebar() {
   const { isCollapsed, isHidden, setIsCollapsed, setIsHidden } = useSidebar();
   const [isHovering, setIsHovering] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  // Skip initial animation when component mounts
+  useEffect(() => {
+    // Use a short timeout to set initialLoad to false after the component has mounted
+    const timer = setTimeout(() => {
+      setInitialLoad(false);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Toggle sidebar state - cycles through states: expanded -> collapsed -> hidden
   const toggleSidebar = () => {
@@ -274,6 +285,12 @@ export default function Sidebar() {
     };
   }, [isHidden, isCollapsed, setIsHidden]);
 
+  // Get sidebar positioning class based on current state
+  const getSidebarPositioningClass = () => {
+    // Always use fixed positioning to prevent scrolling with content
+    return "fixed left-0 top-0";
+  };
+
   // Get sidebar width class based on current state
   const getSidebarWidthClass = () => {
     if (isCollapsed) {
@@ -281,18 +298,21 @@ export default function Sidebar() {
     }
     
     if (isHidden && !isHovering) {
-      return "w-2";
+      return "w-1";
     }
     
     return "w-64"; // Default expanded state
   };
 
-  // Set appropriate sidebar width class based on state
+  // Set appropriate sidebar classes based on state
   const sidebarWidthClass = getSidebarWidthClass();
+  const sidebarPositioningClass = getSidebarPositioningClass();
 
-  // Define transition classes
-  const transitionClasses = "transition-all duration-300 ease-in-out";
-
+  // Define transition classes - don't apply on initial load but use a smoother transition
+  const transitionClasses = initialLoad 
+    ? "" 
+    : "transition-all duration-200 ease-out";
+  
   return (
     <>
       <MobileMenuButton 
@@ -304,15 +324,16 @@ export default function Sidebar() {
       {/* Main sidebar component */}
       <aside 
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-200 flex flex-col ${sidebarWidthClass} ${transitionClasses} ${
-          (isHidden && !isHovering) ? "sidebar-hidden" : ""
+        className={`h-screen bg-white border-r border-slate-200 flex flex-col flex-shrink-0 ${sidebarWidthClass} ${sidebarPositioningClass} ${transitionClasses} ${
+          (isHidden && !isHovering) ? "opacity-60 overflow-hidden" : "opacity-100"
         } z-40`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        style={{ willChange: "width, transform" }} // Optimize for animations
       >
         <SidebarToggleButton 
           isCollapsed={isCollapsed}
-          isHidden={isHidden}
+          isHidden={isHidden} // Fix the incorrect parameter
           isHovering={isHovering}
           onToggle={toggleSidebar}
         />

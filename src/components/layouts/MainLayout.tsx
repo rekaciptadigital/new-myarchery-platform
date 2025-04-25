@@ -7,43 +7,45 @@ import { useEffect, useState } from "react";
 // MainContent component that adjusts spacing based on sidebar state
 function MainContent({ children }: Readonly<{ children: React.ReactNode }>) {
   const { isCollapsed, isHidden } = useSidebar();
-  const [isHovering, setIsHovering] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   
-  // Calculate margin based on sidebar state
-  const getMarginClass = () => {
-    if (isHidden && !isHovering) {
-      return "ml-2"; // Almost no margin when sidebar is hidden
-    } else if (isCollapsed) {
-      return "ml-16"; // Small margin when sidebar is collapsed
-    } else {
-      return "ml-64"; // Full margin when sidebar is expanded
-    }
-  };
-
-  // Listen for hover state from the sidebar
+  // Set initial load to false after first render
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // If sidebar is hidden, check if mouse is near left edge to show hover state
-      if (isHidden && e.clientX < 10) {
-        setIsHovering(true);
-      } else if (isHidden && e.clientX > 64) {
-        setIsHovering(false);
-      }
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [isHidden]);
+    // Skip initial animation by setting initialLoad to false after a very short delay
+    const timer = setTimeout(() => {
+      setInitialLoad(false);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Calculate classes for main content
+  const getMainContentClasses = () => {
+    // Base classes that are always applied
+    let classes = "min-h-screen p-6 md:p-8 w-full ";
+    
+    // Determine left margin based on sidebar state
+    if (!isHidden) {
+      classes += isCollapsed ? "ml-16 " : "ml-64 ";
+    } else {
+      classes += "ml-1 ";
+    }
+    
+    // Determine if we should apply transitions
+    // Don't apply transitions on initial load to prevent unwanted animations
+    if (!initialLoad) {
+      classes += "transition-all duration-200 ease-out ";
+    }
+    
+    return classes;
+  };
 
   return (
     <main 
-      className={`transition-all duration-300 ease-in-out min-h-screen ${getMarginClass()}`}
+      className={getMainContentClasses()}
+      style={{ willChange: "margin" }} // Optimize for animations
     >
-      <div className="p-6 md:p-8">
-        {children}
-      </div>
+      {children}
     </main>
   );
 }
@@ -52,7 +54,7 @@ function MainContent({ children }: Readonly<{ children: React.ReactNode }>) {
 export default function MainLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 flex relative overflow-x-hidden">
         <Sidebar />
         <MainContent>
           {children}
