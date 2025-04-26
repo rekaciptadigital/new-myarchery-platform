@@ -28,7 +28,7 @@ export default function ScoringSettingsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Jadwal Card */}
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col bg-white shadow-sm border border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-green-600" />
@@ -53,8 +53,34 @@ export default function ScoringSettingsPage() {
           </CardFooter>
         </Card>
 
-        {/* Bracket Card */}
-        <Card className="h-full flex flex-col">
+        {/* Target/Bantalan Card - Moved to second position */}
+        <Card className="h-full flex flex-col bg-white shadow-sm border border-slate-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-purple-600" />
+              Bantalan
+            </CardTitle>
+            <CardDescription>
+              Atur jumlah dan distribusi bantalan untuk setiap kategori
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <p className="text-sm text-slate-600">
+              Tentukan jumlah maksimal bantalan tersedia dan distribusikan peserta ke masing-masing bantalan berdasarkan hari dan kategori.
+            </p>
+          </CardContent>
+          <CardFooter className="pt-0">
+            <Link href={`/scoring/${eventId}/settings/target`} className="w-full">
+              <Button variant="outline" className="w-full" size="sm">
+                <Settings size={14} className="mr-2" />
+                Pengaturan
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Bracket Card - Now in third position */}
+        <Card className="h-full flex flex-col bg-white shadow-sm border border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-blue-600" />
@@ -79,8 +105,8 @@ export default function ScoringSettingsPage() {
           </CardFooter>
         </Card>
 
-        {/* FOP Card */}
-        <Card className="h-full flex flex-col">
+        {/* FOP Card - Still in fourth position */}
+        <Card className="h-full flex flex-col bg-white shadow-sm border border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
               <Info className="h-5 w-5 text-amber-600" />
@@ -97,32 +123,6 @@ export default function ScoringSettingsPage() {
           </CardContent>
           <CardFooter className="pt-0">
             <Link href={`/scoring/${eventId}/settings/fop`} className="w-full">
-              <Button variant="outline" className="w-full" size="sm">
-                <Settings size={14} className="mr-2" />
-                Pengaturan
-              </Button>
-            </Link>
-          </CardFooter>
-        </Card>
-
-        {/* Target/Bantalan Card */}
-        <Card className="h-full flex flex-col">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-purple-600" />
-              Bantalan
-            </CardTitle>
-            <CardDescription>
-              Atur jumlah dan distribusi bantalan untuk setiap kategori
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <p className="text-sm text-slate-600">
-              Tentukan jumlah maksimal bantalan tersedia dan distribusikan peserta ke masing-masing bantalan berdasarkan hari dan kategori.
-            </p>
-          </CardContent>
-          <CardFooter className="pt-0">
-            <Link href={`/scoring/${eventId}/settings/target`} className="w-full">
               <Button variant="outline" className="w-full" size="sm">
                 <Settings size={14} className="mr-2" />
                 Pengaturan

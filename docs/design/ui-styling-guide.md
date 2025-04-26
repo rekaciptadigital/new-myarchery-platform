@@ -230,19 +230,23 @@ Dokumen ini berisi panduan styling dan pola desain visual untuk platform MyArche
 ### 3. Tabel Data
 
 ```tsx
-<div className="border rounded-md bg-gray-50">
+<div className="border rounded-md bg-white overflow-hidden"> {/* Container background white, border added */}
   <table className="min-w-full divide-y divide-gray-200">
+    {/* Updated thead background */}
     <thead className="bg-gray-100">
       <tr>
-        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 1</th>
-        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 2</th>
-        <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+        {/* Updated padding */}
+        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 1</th>
+        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 2</th>
+        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
       </tr>
     </thead>
-    <tbody className="bg-gray-50 divide-y divide-gray-200">
+    {/* Updated tbody background and divider */}
+    <tbody className="bg-white divide-y divide-gray-200">
       <tr>
-        <td className="px-3 py-2 whitespace-nowrap text-sm">Data 1</td>
-        <td className="px-3 py-2 whitespace-nowrap text-sm">Data 2</td>
+        {/* Updated padding */}
+        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">Data 1</td>
+        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">Data 2</td>
         <td className="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
           <Button
             variant="ghost"
@@ -253,6 +257,7 @@ Dokumen ini berisi panduan styling dan pola desain visual untuk platform MyArche
           </Button>
         </td>
       </tr>
+      {/* Add more rows as needed */}
     </tbody>
   </table>
 </div>
