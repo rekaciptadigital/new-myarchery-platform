@@ -1,29 +1,18 @@
-"use client";
-
 import { ReactNode } from "react";
 import { SidebarProvider } from "@/contexts/sidebar-context";
-import dynamic from "next/dynamic";
-import { SidebarLoader } from "@/components/ui/sidebar/SidebarLoader";
-
-// Dynamic import of the organizer sidebar
-const OrganizerSidebar = dynamic(
-  () => import("@/features/dashboard/adapters/organizer/components/OrganizerSidebar").then(mod => mod.default),
-  { 
-    ssr: false,
-    loading: () => <SidebarLoader /> 
-  }
-);
+import OrganizerSidebar from "@/features/dashboard/adapters/organizer/components/OrganizerSidebar";
 
 interface OrganizerEventsLayoutProps {
   children: ReactNode;
 }
 
-export function OrganizerEventsLayout({ children }: Readonly<OrganizerEventsLayoutProps>) {
+// Using default export instead of named export
+export default function OrganizerEventsLayout({ children }: Readonly<OrganizerEventsLayoutProps>) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 flex relative overflow-x-hidden">
         <OrganizerSidebar />
-        <main className="flex-1 ml-16 md:ml-64 p-6 transition-all duration-200">
+        <main className="w-full">
           {children}
         </main>
       </div>

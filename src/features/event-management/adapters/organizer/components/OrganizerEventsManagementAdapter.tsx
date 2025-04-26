@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,57 +22,87 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Data dummy untuk event - akan diganti dengan data dari API
-const events = [
-  {
-    id: "123",
-    name: "Kejuaraan Nasional Panahan 2025",
-    description: "Kompetisi panahan nasional terbesar di Indonesia untuk tahun 2025.",
-    location: "Lapangan Panahan Senayan, Jakarta",
-    date: "15-17 Juni 2025",
-    status: "Publikasi",
-    participants: 80,
-    categories: 8,
-    revenue: 12000000,
-  },
-  {
-    id: "124",
-    name: "Archery Open Junior 2025",
-    description: "Turnamen panahan untuk atlet junior dengan kategori U-15 dan U-18.",
-    location: "GOR Arcadia, Bandung",
-    date: "1-2 Juni 2025",
-    status: "Draft",
-    participants: 30,
-    categories: 4,
-    revenue: 4500000,
-  },
-  {
-    id: "125",
-    name: "Liga Panahan Kota 2025",
-    description: "Kompetisi panahan antar klub di tingkat kota.",
-    location: "Lapangan Panahan Kota, Surabaya",
-    date: "25-27 April 2025",
-    status: "Berlangsung",
-    participants: 45,
-    categories: 6,
-    revenue: 7500000,
-  },
-  {
-    id: "126",
-    name: "Invitational Archery Tournament",
-    description: "Turnamen panahan khusus undangan untuk klub-klub terpilih.",
-    location: "Lapangan Utama, Yogyakarta",
-    date: "8-9 Juli 2025",
-    status: "Selesai",
-    participants: 60,
-    categories: 6,
-    revenue: 9000000,
-  },
-];
+// Interfase data event
+interface Event {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  date: string;
+  status: string;
+  participants: number;
+  categories: number;
+  revenue?: number;
+}
 
-export function OrganizerEventsListingAdapter() {
+export function OrganizerEventsManagementAdapter() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    // Simulasi fetch data dari API
+    const fetchEvents = async () => {
+      try {
+        // Ini akan diganti dengan panggilan API asli nantinya
+        const mockEvents: Event[] = [
+          {
+            id: "123",
+            name: "Kejuaraan Nasional Panahan 2025",
+            description: "Kompetisi panahan nasional terbesar di Indonesia tahun 2025.",
+            location: "Lapangan Panahan Senayan, Jakarta",
+            date: "15-17 Juni 2025",
+            status: "Publikasi",
+            participants: 80,
+            categories: 8,
+            revenue: 12000000,
+          },
+          {
+            id: "124",
+            name: "Archery Open Junior 2025",
+            description: "Turnamen panahan untuk atlet junior dengan kategori U-15 dan U-18.",
+            location: "GOR Arcadia, Bandung",
+            date: "1-2 Juni 2025",
+            status: "Draft",
+            participants: 30,
+            categories: 4,
+            revenue: 4500000,
+          },
+          {
+            id: "125",
+            name: "Liga Panahan Kota 2025",
+            description: "Kompetisi panahan antar klub di tingkat kota.",
+            location: "Lapangan Panahan Kota, Surabaya",
+            date: "25-27 April 2025",
+            status: "Berlangsung",
+            participants: 45,
+            categories: 6,
+            revenue: 7500000,
+          },
+          {
+            id: "126",
+            name: "Invitational Archery Tournament",
+            description: "Turnamen panahan khusus undangan untuk klub-klub terpilih.",
+            location: "Lapangan Utama, Yogyakarta",
+            date: "8-9 Juli 2025",
+            status: "Selesai",
+            participants: 60,
+            categories: 6,
+            revenue: 9000000,
+          },
+        ];
+
+        setEvents(mockEvents);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   // Helper function untuk mendapatkan status badge classes
   const getStatusBadgeClasses = (status: string) => {
@@ -102,7 +132,11 @@ export function OrganizerEventsListingAdapter() {
   const totalEvents = events.length;
   const activeEvents = events.filter(e => e.status === "Berlangsung" || e.status === "Publikasi").length;
   const totalParticipants = events.reduce((sum, event) => sum + event.participants, 0);
-  const totalRevenue = events.reduce((sum, event) => sum + event.revenue, 0);
+  const totalRevenue = events.reduce((sum, event) => sum + (event.revenue ?? 0), 0);
+
+  if (isLoading) {
+    return <div className="p-4">Loading events...</div>;
+  }
 
   return (
     <div>
@@ -296,7 +330,7 @@ export function OrganizerEventsListingAdapter() {
                       </div>
                       <div className="text-sm bg-slate-50 rounded p-2">
                         <div className="font-medium">Pendapatan</div>
-                        <div className="text-blue-600 font-bold">Rp {(event.revenue/1000000).toFixed(1)}jt</div>
+                        <div className="text-blue-600 font-bold">Rp {((event.revenue ?? 0)/1000000).toFixed(1)}jt</div>
                       </div>
                       <div className="text-sm bg-slate-50 rounded p-2">
                         <div className="font-medium">Aktivitas Terbaru</div>
