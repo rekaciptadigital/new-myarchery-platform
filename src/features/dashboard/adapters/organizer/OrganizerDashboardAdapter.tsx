@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { DashboardService, statusList } from "../../core/services/dashboard-service";
 import { Event, EventFormData } from "../../core/models/dashboard";
 import { EventStats } from "./components/EventStats";
-import { EventForm } from "./components/EventForm";
 import { EventList } from "./components/EventList";
-import { DashboardHeader } from "./components/DashboardHeader";
 import { EventChecklist } from "./components/EventChecklist";
+import { EventForm } from "./components/EventForm";
+import { DashboardHeader } from "./components/DashboardHeader";
 
 export function OrganizerDashboardAdapter() {
   const [events, setEvents] = useState<Event[]>([]);

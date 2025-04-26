@@ -1,37 +1,89 @@
+"use client";
+
 import { EventFormData } from "../../../core/models/dashboard";
 
-type EventFormProps = {
+interface EventFormProps {
   form: EventFormData;
   statusList: string[];
   editingId: number | null;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-};
+}
 
-export function EventForm({ form, statusList, editingId, onSubmit, onChange }: EventFormProps) {
+export function EventForm({
+  form,
+  statusList,
+  editingId,
+  onSubmit,
+  onChange,
+}: Readonly<EventFormProps>) {
   return (
-    <div className="bg-white rounded shadow p-6 mb-8">
-      <h2 className="font-semibold text-lg mb-4">{editingId ? "Edit Event" : "Buat Event Baru"}</h2>
-      <form className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end" onSubmit={onSubmit}>
-        <div>
-          <label htmlFor="event-name" className="block text-sm font-medium mb-1">Nama Event</label>
-          <input id="event-name" name="name" value={form.name} onChange={onChange} required className="w-full border rounded px-3 py-2" />
+    <div className="bg-white p-6 rounded-lg shadow-sm mb-6 border border-slate-200">
+      <h2 className="text-lg font-medium mb-4">
+        {editingId ? "Edit Event" : "Tambah Event Baru"}
+      </h2>
+      
+      <form onSubmit={onSubmit}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+              Nama Event
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={form.name}
+              onChange={onChange}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Masukkan nama event"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="date" className="block text-sm font-medium text-slate-700 mb-1">
+              Tanggal Event
+            </label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={form.date}
+              onChange={onChange}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-slate-700 mb-1">
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={form.status}
+              onChange={onChange}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {statusList.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label htmlFor="event-date" className="block text-sm font-medium mb-1">Tanggal</label>
-          <input id="event-date" name="date" type="date" value={form.date} onChange={onChange} required className="w-full border rounded px-3 py-2" />
+        
+        <div className="mt-4 flex justify-end">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          >
+            {editingId ? "Update Event" : "Tambah Event"}
+          </button>
         </div>
-        <div>
-          <label htmlFor="event-status" className="block text-sm font-medium mb-1">Status</label>
-          <select id="event-status" name="status" value={form.status} onChange={onChange} className="w-full border rounded px-3 py-2">
-            {statusList.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 font-semibold hover:bg-blue-700 transition">
-          {editingId ? "Simpan Perubahan" : "Tambah Event"}
-        </button>
       </form>
     </div>
   );

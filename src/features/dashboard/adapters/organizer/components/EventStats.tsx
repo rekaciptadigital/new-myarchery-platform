@@ -6,7 +6,7 @@ type EventStatsProps = {
   totalIncome: number;
 };
 
-export function EventStats({ stats, totalParticipants, totalIncome }: EventStatsProps) {
+export function EventStats({ stats, totalParticipants, totalIncome }: Readonly<EventStatsProps>) {
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">

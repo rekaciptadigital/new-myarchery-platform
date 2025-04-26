@@ -64,6 +64,7 @@ export const DashboardService = {
   
   async deleteEvent(id: number): Promise<void> {
     // In a real app, you would delete from Supabase here
+    console.log(`Deleting event with id: ${id}`);
     return Promise.resolve();
   },
   

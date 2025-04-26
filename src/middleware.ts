@@ -1,33 +1,44 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
-  // Redirect from old URL pattern to new URL pattern for login routes
-  if (pathname === '/login/customer') {
-    return NextResponse.redirect(new URL('/customer/login', req.url));
+export async function middleware(req: NextRequest) {
+  const isOrganizerRoute = req.nextUrl.pathname.startsWith('/organizer');
+  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
+  const isCustomerRoute = req.nextUrl.pathname.startsWith('/customer');
+  
+  // For now, allow all access to the organizer dashboard for development purposes
+  // In a production environment, you would check authentication and roles here
+  
+  if (isOrganizerRoute || isAdminRoute || isCustomerRoute) {
+    // This is a placeholder for real auth check - for dev we just let it through
+    // When implementing real auth, uncomment the below code:
+    /*
+    // Check if user is authenticated
+    const token = req.cookies.get('auth-token')?.value;
+    
+    if (!token) {
+      // Redirect to login if not authenticated
+      return NextResponse.redirect(new URL('/auth/login', req.url));
+    }
+    
+    // Check role (simplified example - actual implementation would decode and validate the token)
+    const userRole = getUserRoleFromToken(token);
+    
+    // Validate role-based access
+    if (isOrganizerRoute && userRole !== 'organizer') {
+      return NextResponse.redirect(new URL('/unauthorized', req.url));
+    }
+    */
   }
-
-  if (pathname === '/login/organizer') {
-    return NextResponse.redirect(new URL('/organizer/login', req.url));
-  }
-
-  // Continue with existing middleware logic
+  
   return NextResponse.next();
 }
 
-// Update the config to include the login routes in the matcher
 export const config = {
   matcher: [
     // Apply this middleware to all routes that require auth
-    '/admin/:path*',
     '/organizer/:path*',
+    '/admin/:path*',
     '/customer/:path*',
-    // Add redirects for old routes
-    '/login/customer',
-    '/login/organizer',
-    // Exclude auth routes
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -6,7 +6,7 @@ type EventListProps = {
   onDelete: (id: number) => void;
 };
 
-export function EventList({ events, onEdit, onDelete }: EventListProps) {
+export function EventList({ events, onEdit, onDelete }: Readonly<EventListProps>) {
   return (
     <div className="bg-white rounded shadow p-6 mb-8 overflow-x-auto">
       <h2 className="font-semibold text-lg mb-4">Daftar Event</h2>
