@@ -1,8 +1,8 @@
 "use client";
 
-import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginForm } from "../components/LoginForm";
 
-export default function LoginPage() {
+export function LoginAdapter() {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow grid md:grid-cols-2 items-stretch w-full">
@@ -13,7 +13,7 @@ export default function LoginPage() {
           </div>
         </div>
         
-        {/* Right column with blue background and content from homepage */}
+        {/* Right column with blue background and content */}
         <div className="bg-blue-600 text-white p-8 md:p-12 flex items-center justify-center order-1 md:order-2">
           <div className="max-w-xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">

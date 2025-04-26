@@ -66,7 +66,7 @@ export default function Home() {
                 <p className="text-slate-600 mb-6 flex-grow">
                   Buat dan kelola event panahan, pendaftaran peserta, dan sistem scoring.
                 </p>
-                <Link href="/login" className="w-full">
+                <Link href="/organizer/login" className="w-full">
                   <Button className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center">
                     Masuk sebagai Organizer
                     <ArrowRight size={16} className="ml-2" />
