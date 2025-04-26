@@ -1,4 +1,4 @@
-import { OrganizerEventsLayout } from "@/features/events/adapters/organizer/components/OrganizerEventsLayout";
+import { OrganizerEventsLayout } from "@/features/event-management/adapters/organizer/components/OrganizerEventsLayout";
 
 export default function OrganizerEventsLayoutWrapper({
   children,
