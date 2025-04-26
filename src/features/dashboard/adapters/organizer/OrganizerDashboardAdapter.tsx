@@ -77,11 +77,11 @@ export function OrganizerDashboardAdapter() {
   const totalIncome = DashboardService.getTotalIncome(events);
   
   if (isLoading) {
-    return <div>Loading dashboard data...</div>;
+    return <div className="p-4 bg-white rounded shadow">Loading dashboard data...</div>;
   }
   
   return (
-    <div>
+    <div className="w-full max-w-full">
       <DashboardHeader />
       
       {/* Stats grid */}

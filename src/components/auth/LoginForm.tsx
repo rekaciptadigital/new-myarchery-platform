@@ -46,7 +46,7 @@ export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Rea
         router.push("/customer/dashboard");
       } else {
         // Organizer login akan diarahkan ke dashboard organizer
-        router.push("/dashboard");
+        router.push("/organizer/dashboard");
       }
     } catch {
       setError("Login gagal. Periksa email dan password Anda.");

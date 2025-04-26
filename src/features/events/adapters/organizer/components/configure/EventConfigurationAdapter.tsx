@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { useParams } from "next/navigation";
 
 // Dummy event data
 const dummyEvent = {
@@ -62,16 +65,9 @@ const dummyEvent = {
   ]
 };
 
-// Currency options
-const currencies = [
-  { value: "IDR", label: "IDR - Indonesian Rupiah" },
-  { value: "USD", label: "USD - US Dollar" },
-  { value: "SGD", label: "SGD - Singapore Dollar" },
-  { value: "MYR", label: "MYR - Malaysian Ringgit" }
-];
-
-export default function ConfigureEventPage() {
-  // Use useParams() directly with type assertion instead of props and use()
+export function EventConfigurationAdapter() {
+  const params = useParams<{ eventId: string }>();
+  const eventId = params.eventId;
   
   // In a real app, you would fetch event data based on eventId
   const [event, setEvent] = useState(dummyEvent);
