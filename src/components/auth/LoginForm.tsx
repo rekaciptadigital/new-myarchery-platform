@@ -4,20 +4,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox"; // Add Checkbox import
+import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 interface LoginFormProps {
   isAdminLogin?: boolean;
+  isCustomerLogin?: boolean;
 }
 
-export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
+export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Readonly<LoginFormProps>) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Set button color based on login type
+  const getButtonClass = () => {
+    if (isAdminLogin) return "bg-purple-600 hover:bg-purple-700";
+    if (isCustomerLogin) return "bg-green-600 hover:bg-green-700";
+    return "bg-blue-600 hover:bg-blue-700"; // default for organizer
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +41,9 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
       if (isAdminLogin) {
         // Admin login akan diarahkan ke dashboard admin
         router.push("/admin/dashboard");
+      } else if (isCustomerLogin) {
+        // Customer login akan diarahkan ke dashboard customer
+        router.push("/customer/dashboard");
       } else {
         // Organizer login akan diarahkan ke dashboard organizer
         router.push("/dashboard");
@@ -43,10 +55,16 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
     }
   };
 
-  // Removed Card wrapper to match the screenshot design
+  // Helper function to get the appropriate login title
+  const getLoginTitle = () => {
+    if (isAdminLogin) return "Login Administrator";
+    if (isCustomerLogin) return "Login Atlet & Peserta";
+    return "Login Penyelenggara";
+  };
+
   return (
-    <div className="w-full max-w-sm space-y-6"> {/* Adjusted max-width and added spacing */}
-      <div className="flex justify-start mb-8"> {/* Align logo left and add margin */}
+    <div className="w-full max-w-sm space-y-6">
+      <div className="flex justify-start mb-8">
         <Image 
           src="/logos/logo_myarchery.svg" 
           alt="MyArchery Logo" 
@@ -56,51 +74,48 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
         />
       </div>
       
-      {/* Added Welcome back text */}
       <div className="space-y-1">
-        <p className="text-sm text-slate-600">Welcome back</p>
-        <h1 className="text-2xl font-bold">Sign In To Your Account</h1>
+        <p className="text-sm text-slate-600">Selamat datang kembali</p>
+        <h1 className="text-2xl font-bold">
+          {getLoginTitle()}
+        </h1>
       </div>
 
-      {/* Removed CardHeader, CardContent, CardFooter */}
-      <form onSubmit={handleSubmit} className="space-y-5"> {/* Increased spacing */}
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          {/* Removed Label, using placeholder as label */}
           <Input
             id="email"
             type="email"
-            placeholder="Enter username or email" // Updated placeholder
+            placeholder="Masukkan email atau username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md" // Added styling
+            className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md"
           />
         </div>
         <div className="space-y-2">
-          {/* Removed Label, using placeholder as label */}
           <Input
             id="password"
             type="password"
-            placeholder="Password" // Updated placeholder
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md" // Added styling
+            className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md"
           />
         </div>
 
-        {/* Added Remember Me checkbox and Forgot Password link */} 
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-2">
             <Checkbox id="remember-me" className="border-slate-300" />
-            <Label htmlFor="remember-me" className="font-normal text-slate-600">Remember Me</Label>
+            <Label htmlFor="remember-me" className="font-normal text-slate-600">Ingat saya</Label>
           </div>
           <button
             type="button"
             className="font-medium text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
             onClick={() => window.alert("Fitur reset password akan segera tersedia")}
           >
-            Forgot your password?
+            Lupa password?
           </button>
         </div>
 
@@ -110,18 +125,20 @@ export function LoginForm({ isAdminLogin = false }: Readonly<LoginFormProps>) {
           </div>
         )}
 
-        {/* Updated Login Button Style */}
         <Button 
           type="submit" 
-          className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-12 rounded-full text-sm tracking-wide" 
+          className={`w-full text-white ${getButtonClass()} font-bold h-12 rounded-md text-sm`}
           disabled={isLoading}
         >
-          {isLoading ? "MEMPROSES..." : "LOGIN"} {/* Uppercase text */}
+          {isLoading ? "MEMPROSES..." : "MASUK"}
         </Button>
       </form>
       
-      {/* Removed Register link and Social Logins to match screenshot */}
-      {/* {!isAdminLogin && ( ... )} */}
+      {isCustomerLogin && (
+        <div className="text-center text-sm text-slate-600">
+          <p>Belum memiliki akun? <Link href="/register/customer" className="text-green-600 hover:text-green-800 font-medium">Daftar di sini</Link></p>
+        </div>
+      )}
     </div>
   );
 }
