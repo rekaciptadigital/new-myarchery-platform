@@ -1,5 +1,11 @@
 # Panduan Arsitektur MyArchery Platform
 
+> **Dokumen Version Control**  
+> **Dibuat**: 10 Januari 2024  
+> **Diperbarui Terakhir**: 26 April 2025  
+> **Penulis**: Laksmana Tri Moerdani  
+> **Kontributor**: Engineering Team
+
 ## Domain-Driven Modular Architecture dengan Role Adaptation Layer dan Supabase Integration
 
 ### Daftar Isi
@@ -190,7 +196,45 @@ Feature Layer mengorganisir kode berdasarkan domain bisnis dan fitur utama aplik
 
 - Features dapat menggunakan Core Libraries (`/lib/*`)
 - Features dapat mengakses komponen UI umum (`/components/*`)
-- Features TIDAK boleh mengakses langsung feature lain, harus melalui ekspor publik 
+- Features TIDAK boleh mengakses langsung feature lain, harus melalui ekspor publik
+
+### Isolasi dan Komunikasi Antar Feature
+
+1. **Strict Module Boundaries** - Feature harus diisolasi sepenuhnya dari feature lain
+   - Tidak boleh melakukan import langsung dari feature lain
+   - Tidak boleh mengakses state internal feature lain
+   - Tidak boleh memanggil fungsi/service dari feature lain tanpa melalui API publik
+
+2. **Public API Pattern** - Setiap feature harus mendefinisikan API publik yang jelas
+   ```typescript
+   // features/event-management/index.ts (Public API)
+   export { EventService } from './core/services';
+   export type { Event, EventDetail } from './core/models';
+   export { EventAdminAdapter } from './adapters/admin';
+   export { EventOrganizerAdapter } from './adapters/organizer';
+   // Hanya ekspor yang diperlukan oleh feature lain
+   ```
+
+3. **Komunikasi Antar Feature** - Pattern yang direkomendasikan:
+   - **Facade Pattern** - Feature besar dapat menyediakan facade untuk feature lain
+   - **Event-based Communication** - Gunakan event emitter/subscriber untuk komunikasi loose-coupling
+   - **Shared Core Services** - Berbagi data melalui service di `/lib`
+
+4. **Shared State Management** - Jika beberapa feature perlu berbagi state:
+   - Pindahkan state ke level yang lebih tinggi (global context)
+   - Atau gunakan service pattern dengan state yang terkelola di `/lib`
+
+5. **Dependency Injection** - Gunakan DI untuk mengurangi coupling langsung:
+   ```typescript
+   // Contoh Dependency Injection
+   function FeatureComponent({ eventService = defaultEventService }) {
+     // Component menggunakan eventService yang di-inject
+   }
+   ```
+
+6. **Monitoring Dependensi** - Gunakan tools untuk memantau dependensi:
+   - ESLint rules untuk mencegah import dari feature lain
+   - Dependency graph generator untuk visualisasi hubungan antar module
 
 ## 6. Role Adaptation Layer
 
@@ -354,6 +398,104 @@ Pendekatan state management yang terstruktur dan sesuai dengan arsitektur aplika
 3. **Zustand / Jotai** - Untuk state management yang lebih kompleks (opsional)
 4. **Role-Specific State** - Pemisahan state berdasarkan role
 
+### Prinsip Konsistensi State Management
+
+1. **Pemisahan State Berdasarkan Konteks**
+   - **Global State** - Informasi yang dibutuhkan di seluruh aplikasi (auth, theme, preferences)
+   - **Feature State** - State yang hanya relevan untuk satu feature
+   - **Component State** - State lokal yang hanya dibutuhkan oleh satu komponen
+   - **Server State** - Data dari API/backend yang perlu di-cache dan disinkronkan
+
+2. **Role-Specific State Segregation**
+   - State untuk tiap role harus dipisahkan untuk menghindari kebocoran data
+   - Implementasi melalui:
+     ```typescript
+     // contexts/role-specific/admin-context.tsx
+     const AdminContext = createContext(null);
+     
+     // contexts/role-specific/organizer-context.tsx
+     const OrganizerContext = createContext(null);
+     
+     // Contoh penggunaan di layout
+     function AdminLayout({ children }) {
+       // Hanya menyediakan konteks yang relevan untuk admin
+       return (
+         <AdminContext.Provider value={adminState}>
+           {children}
+         </AdminContext.Provider>
+       );
+     }
+     ```
+
+3. **Standar Implementasi Context**
+   - Pola Context Module dengan Provider dan Hook
+   - Semua provider harus dibuat dengan:
+     - Interface standar (`initialState`, `reducer`, `actions`)
+     - Error boundary
+     - Type safety dengan TypeScript
+   - Contoh pattern standar:
+     ```typescript
+     // 1. Create context module
+     const createContext = () => {
+       // State setup
+       const [state, dispatch] = useReducer(reducer, initialState);
+       
+       // Memoized actions
+       const actions = useMemo(() => ({
+         action1: () => {...},
+         action2: () => {...},
+       }), [dependencies]);
+       
+       return { state, actions };
+     }
+     
+     // 2. Create context and provider
+     const Context = createContext(null);
+     
+     export const Provider = ({ children }) => {
+       const contextValue = createContext();
+       return (
+         <Context.Provider value={contextValue}>
+           {children}
+         </Context.Provider>
+       );
+     }
+     
+     // 3. Create hook for consumption
+     export const useFeatureContext = () => {
+       const context = useContext(Context);
+       if (!context) throw new Error("useFeatureContext must be used within Provider");
+       return context;
+     }
+     ```
+
+4. **React Query/SWR Usage Patterns**
+   - Standar untuk query keys:
+     ```typescript
+     // Format: [domain, entity, id?, params?]
+     const queryKey = ['events', 'list', { status: 'active' }];
+     const { data } = useQuery(queryKey, fetchEvents);
+     ```
+   
+   - Centralized query client configuration:
+     ```typescript
+     // lib/react-query/config.ts
+     export const queryClient = new QueryClient({
+       defaultOptions: {
+         queries: {
+           staleTime: 5 * 60 * 1000, // 5 minutes
+           retry: 1,
+           refetchOnWindowFocus: import.meta.env.PROD,
+         },
+       },
+     });
+     ```
+
+5. **State Testing Strategy**
+   - Unit test untuk reducers dan actions
+   - Integration test untuk keseluruhan context
+   - Mocking context dengan values yang spesifik untuk testing komponen
+
 ### Global Context
 
 ```typescript
@@ -504,6 +646,83 @@ export const config = {
   ],
 }
 ```
+
+### Implementasi Auth Protection yang Konsisten
+
+1. **Middleware-First Approach**
+   - Proteksi rute dimulai dari middleware sebagai first line of defense
+   - Middleware harus mencakup semua rute spesifik role dengan matcher yang tepat
+   - Pastikan exclude pattern tidak membuka celah keamanan yang tidak diinginkan
+
+2. **Defense in Depth**
+   - Selain middleware, gunakan server components untuk verifikasi kedua
+   - Selalu verifikasi role di server components untuk mengakses data sensitif
+   ```typescript
+   // app/(roles)/admin/dashboard/page.tsx
+   import { redirect } from 'next/navigation';
+   import { createServerSupabaseClient } from '@/lib/supabase/server';
+   
+   export default async function AdminDashboardPage() {
+     const supabase = createServerSupabaseClient();
+     const { data: { session } } = await supabase.auth.getSession();
+     
+     if (!session || session.user?.user_metadata?.role !== 'admin') {
+       redirect('/unauthorized');
+     }
+     
+     // Lanjutkan dengan konten admin
+   }
+   ```
+
+3. **Error Handling & Redirects**
+   - Standardisasi error pages dan redirect flows:
+     - `/unauthorized` - Untuk akses tidak diizinkan (role salah)
+     - `/login` - Untuk user tidak terautentikasi
+     - `/forbidden` - Untuk user terautentikasi tapi tidak punya izin spesifik
+
+4. **Role-Based Layout Wrapper**
+   - Gunakan layout untuk menambahkan lapisan proteksi tambahan
+   ```typescript
+   // app/(roles)/admin/layout.tsx
+   import { redirect } from 'next/navigation';
+   import { createServerSupabaseClient } from '@/lib/supabase/server';
+   
+   export default async function AdminLayout({ children }) {
+     const supabase = createServerSupabaseClient();
+     const { data: { session } } = await supabase.auth.getSession();
+     
+     if (!session || session.user?.user_metadata?.role !== 'admin') {
+       redirect('/unauthorized');
+     }
+     
+     return (
+       <AdminLayoutUI>
+         {children}
+       </AdminLayoutUI>
+     );
+   }
+   ```
+
+5. **Client-Side Protection**
+   - Tambahkan client-side protection untuk navigasi UI:
+   ```typescript
+   // components/navigation/RoleProtectedLink.tsx
+   import { useAuth } from '@/contexts/auth-context';
+   
+   export function RoleProtectedLink({ href, role, children }) {
+     const { user } = useAuth();
+     const hasAccess = user?.role === role;
+     
+     if (!hasAccess) return null;
+     
+     return <Link href={href}>{children}</Link>;
+   }
+   ```
+
+6. **Testing Strategi Proteksi**
+   - Test middleware untuk setiap role scenario
+   - Test redirects dan error handling
+   - Simulasi berbagai kondisi autentikasi
 
 ## 10. Panduan Implementasi Feature Baru
 
@@ -725,6 +944,43 @@ describe('EventAdminAdapter', () => {
 - Document domain models and business rules
 - Add JSDoc comments on public APIs
 - Create example implementations for complex features
+
+### 8. Konsistensi Implementasi
+
+- **Code Review Checklist** - Menggunakan checklist berikut untuk setiap PR:
+  - Apakah Core Logic terpisah dari UI Components?
+  - Apakah adapters memanfaatkan core services?
+  - Apakah permissions/role-checks diimplementasikan dengan benar?
+  - Apakah ada direct access antar features yang melanggar arsitektur?
+  - Apakah feature mengikuti struktur folder yang ditetapkan?
+
+- **Feature Completeness Matrix** - Pastikan setiap feature memiliki:
+  - Core models yang terdefinisi dengan baik
+  - Core services dengan error handling standar
+  - Adapters untuk setiap role yang relevan 
+  - Tests untuk core services
+
+- **API Contract Enforcement** - Setiap service harus:
+  - Menggunakan schema validation (Zod/Yup) untuk input
+  - Mengembalikan struktur respons yang konsisten
+  - Menggunakan interface TypeScript untuk mendefinisikan kontrak
+  - Menerapkan error handling pattern yang seragam
+
+- **Role-Based Implementation Audit** - Lakukan audit rutin terhadap:
+  - Konsistensi adapters di seluruh roles (admin/organizer/customer)
+  - Permission checks di setiap adapter
+  - Supabase RLS policies untuk setiap entitas
+
+- **Pemantauan Dependency Graph** - Review berkala:
+  - Dependensi antar features 
+  - Dependensi cyclic yang perlu dihindari
+  - Ukuran bundle untuk optimasi performa
+
+- **Component Library Compliance** - Memastikan UI components:
+  - Menggunakan design system yang konsisten
+  - Menerapkan accessibility (a11y) standards
+  - Responsif di seluruh device/viewport
+  - Dapat di-reuse tanpa side effects
 
 ## Kesimpulan
 
