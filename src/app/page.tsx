@@ -45,7 +45,7 @@ export default function Home() {
                 <p className="text-slate-600 mb-6 flex-grow">
                   Daftar event, lihat jadwal pertandingan, dan pantau skor secara realtime.
                 </p>
-                <Link href="/login/customer" className="w-full">
+                <Link href="/customer/login" className="w-full">
                   <Button className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center">
                     Masuk sebagai Peserta
                     <ArrowRight size={16} className="ml-2" />
@@ -87,7 +87,7 @@ export default function Home() {
                 <p className="text-slate-600 mb-6 flex-grow">
                   Akses panel admin untuk mengatur platform secara keseluruhan.
                 </p>
-                <Link href="/admin" className="w-full">
+                <Link href="/admin/login" className="w-full">
                   <Button className="w-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center">
                     Masuk sebagai Admin
                     <ArrowRight size={16} className="ml-2" />

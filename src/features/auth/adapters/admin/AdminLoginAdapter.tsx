@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LoginCredentials } from "../core/services/auth-service";
-import { useAuthService } from "../core/hooks/useAuthService";
-import { UserRole } from "../core/models";
+import { UserRole } from "../../core/models";
+import { AuthLayout } from "./layouts/AuthLayout";
+import { useAuthService } from "../../core/hooks/useAuthService";
 
-export function LoginForm({ isCustomerLogin = false }) {
+export function AdminLoginAdapter() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,40 +21,39 @@ export function LoginForm({ isCustomerLogin = false }) {
     setError(null);
     
     try {
-      // Use the role "customer" for customer login or generic login
-      const credentials: LoginCredentials = { 
+      const credentials = { 
         email, 
         password,
-        role: isCustomerLogin ? UserRole.CUSTOMER : undefined 
+        role: UserRole.ADMIN 
       };
       
-      // Use the login method from useAuthService
       await login(credentials);
-      
-      // Redirect based on user role (customer) or to dashboard
-      if (isCustomerLogin) {
-        router.push("/customer/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
+      // Redirect to admin dashboard on successful login
+      router.push("/admin/dashboard");
     } catch (err) {
-      // Handle the error thrown by the AuthService
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unexpected error occurred. Please try again.");
+        setError("Terjadi kesalahan saat login. Silakan coba lagi.");
       }
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div>
+  // Admin-specific benefits
+  const adminBenefits = [
+    "Kelola seluruh data platform secara terpusat",
+    "Monitor aktivitas pengguna dan event",
+    "Akses ke pengaturan dan konfigurasi sistem",
+    "Verifikasi dan approval event dari organizer"
+  ];
+
+  const loginFormContent = (
+    <div className="max-w-md w-full">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Login to MyArchery</h2>
-        <p className="text-gray-600">Enter your credentials to access your account</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Admin Login</h2>
+        <p className="text-gray-600">Masuk ke akun admin untuk mengelola platform MyArchery</p>
       </div>
 
       {error && (
@@ -74,8 +73,8 @@ export function LoginForm({ isCustomerLogin = false }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="you@example.com"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="admin@example.com"
               required
             />
           </div>
@@ -89,7 +88,7 @@ export function LoginForm({ isCustomerLogin = false }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="••••••••"
               required
             />
@@ -100,7 +99,7 @@ export function LoginForm({ isCustomerLogin = false }) {
               <input
                 id="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                 Remember me
@@ -108,7 +107,7 @@ export function LoginForm({ isCustomerLogin = false }) {
             </div>
             
             <div className="text-sm">
-              <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800">
+              <Link href="/forgot-password" className="text-purple-600 hover:text-purple-800">
                 Forgot your password?
               </Link>
             </div>
@@ -118,20 +117,30 @@ export function LoginForm({ isCustomerLogin = false }) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70"
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-70"
             >
-              {isLoading ? "Logging in..." : "Sign in"}
+              {isLoading ? "Logging in..." : "Sign in as Admin"}
             </button>
           </div>
           
           <div className="text-center mt-4">
-            <span className="text-gray-600 text-sm">Don&apos;t have an account? </span>
-            <Link href="/register" className="text-blue-600 text-sm font-medium hover:text-blue-800">
-              Sign up
+            <Link href="/" className="text-purple-600 text-sm font-medium hover:text-purple-800">
+              Kembali ke halaman utama
             </Link>
           </div>
         </div>
       </form>
     </div>
+  );
+
+  return (
+    <AuthLayout
+      title="Admin Control Panel"
+      subtitle="Akses ke manajemen platform MyArchery secara keseluruhan dengan tools dan fitur khusus admin."
+      benefits={adminBenefits}
+      accentColor="purple"
+    >
+      {loginFormContent}
+    </AuthLayout>
   );
 }

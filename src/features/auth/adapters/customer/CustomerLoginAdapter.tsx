@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginForm } from "../../components/LoginForm";
 
 export function CustomerLoginAdapter() {
   return (

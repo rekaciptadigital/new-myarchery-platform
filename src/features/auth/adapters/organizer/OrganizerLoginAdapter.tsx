@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AuthService, LoginCredentials } from "../../core/services/auth-service";
+import { LoginCredentials } from "../../core/services/auth-service";
+import { UserRole } from "../../core/models";
+import { useAuthService } from "../../core/hooks/useAuthService";
 
 export function OrganizerLoginAdapter() {
   const [email, setEmail] = useState("");
@@ -11,6 +13,7 @@ export function OrganizerLoginAdapter() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { login } = useAuthService();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,24 +21,21 @@ export function OrganizerLoginAdapter() {
     setError(null);
     
     try {
-      const credentials: LoginCredentials = { email, password };
-      const response = await AuthService.login(credentials);
+      const credentials: LoginCredentials = { 
+        email, 
+        password,
+        role: UserRole.ORGANIZER 
+      };
       
-      if (response.error) {
-        setError(response.error.message);
-      } else {
-        // Check if user has organizer role
-        const userRole = response.user?.user_metadata?.role;
-        if (userRole !== 'organizer') {
-          setError("Access denied. This login is for organizers only.");
-          await AuthService.logout();
-        } else {
-          // Redirect to organizer dashboard
-          router.push("/organizer/dashboard");
-        }
-      }
+      await login(credentials);
+      // Redirect to organizer dashboard on successful login
+      router.push("/organizer/dashboard");
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
