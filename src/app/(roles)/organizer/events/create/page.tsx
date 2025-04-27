@@ -1,8 +1,8 @@
 "use client";
 
-import MainLayout from "@/components/layouts/MainLayout";
+import { OrganizerLayout } from "@/features/dashboard/adapters/organizer/components/OrganizerLayout";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, BookOpen, Calendar, ArrowRight } from "lucide-react";
+import { Trophy, Users, BookOpen, Calendar, ArrowRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 
 // Event type definitions
@@ -12,7 +12,7 @@ const eventTypes = [
     title: "Tournament / Kejuaraan",
     description: "Kompetisi panahan skala kecil atau besar dengan berbagai kategori dan sistem penilaian.",
     icon: <Trophy size={36} className="text-orange-500" />,
-    link: "/events/create/tournament",
+    link: "/organizer/events/create/tournament",
     popular: true,
   },
   {
@@ -20,7 +20,7 @@ const eventTypes = [
     title: "Liga",
     description: "Format multi-match yang berjalan dalam jangka waktu yang panjang dengan sistem poin dan klasemen.",
     icon: <Trophy size={36} className="text-blue-500" />,
-    link: "/events/create/league",
+    link: "/organizer/events/create/league",
     coming: true,
   },
   {
@@ -28,7 +28,7 @@ const eventTypes = [
     title: "Series",
     description: "Rangkaian turnamen terkait dengan peringkat kumulatif dan grand final.",
     icon: <Calendar size={36} className="text-purple-500" />,
-    link: "/events/create/series",
+    link: "/organizer/events/create/series",
     coming: true,
   },
   {
@@ -36,7 +36,7 @@ const eventTypes = [
     title: "Workshop",
     description: "Acara edukasi dan pelatihan teknik panahan untuk berbagai level kemampuan.",
     icon: <BookOpen size={36} className="text-green-500" />,
-    link: "/events/create/workshop",
+    link: "/organizer/events/create/workshop",
     coming: true,
   },
   {
@@ -44,14 +44,21 @@ const eventTypes = [
     title: "Training Camp",
     description: "Program latihan intensif jangka pendek atau panjang dengan pelatih berpengalaman.",
     icon: <Users size={36} className="text-red-500" />,
-    link: "/events/create/training",
+    link: "/organizer/events/create/training",
     coming: true,
   },
 ];
 
-export default function CreateEventPage() {
+export default function OrganizerCreateEventPage() {
   return (
-    <MainLayout>
+    <div>
+      <div className="mb-4">
+        <Link href="/organizer/events" className="text-slate-600 hover:text-slate-800 flex items-center text-sm font-medium">
+          <ChevronLeft size={16} className="mr-1" />
+          Kembali ke Event
+        </Link>
+      </div>
+      
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">Buat Event Baru</h1>
         <p className="text-slate-600">
@@ -99,6 +106,6 @@ export default function CreateEventPage() {
           </Card>
         ))}
       </div>
-    </MainLayout>
+    </div>
   );
 }
