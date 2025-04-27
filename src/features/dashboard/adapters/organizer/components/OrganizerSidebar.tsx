@@ -16,9 +16,9 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/organizer/dashboard", icon: <Home size={20} /> },
   { label: "Event Management", href: "/organizer/events", icon: <Calendar size={20} /> },
+  { label: "Scoring Management", href: "/organizer/scoring", icon: <Target size={20} /> },
   { label: "Peserta", href: "/organizer/participants", icon: <Users size={20} /> },
   { label: "Venue", href: "/organizer/venues", icon: <Map size={20} /> },
-  { label: "Scoring", href: "/organizer/scoring", icon: <Target size={20} /> },
   { label: "Laporan", href: "/organizer/reports", icon: <FileText size={20} /> },
   { label: "Keuangan", href: "/organizer/finances", icon: <DollarSign size={20} /> },
   { label: "Statistik", href: "/organizer/statistics", icon: <BarChart size={20} /> },
