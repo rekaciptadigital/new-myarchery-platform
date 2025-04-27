@@ -1,4 +1,3 @@
-<!-- filepath: /Users/ltmoerdani/RCD/github/new-myarchery-platform/docs/design/layout-structure-guide.md -->
 # Panduan Struktur Layout & Halaman - MyArchery Platform
 
 > **Dokumen Version Control**  
@@ -18,6 +17,7 @@
 8. [Optimasi UI/UX Dashboard](#8-optimasi-uiux-dashboard)
 9. [Best Practices & Checklist](#9-best-practices--checklist)
 10. [Template & Contoh Implementasi](#10-template--contoh-implementasi)
+11. [Panduan Implementasi Layout](#11-panduan-implementasi-layout)
 
 ## 1. Pendahuluan
 
@@ -643,8 +643,451 @@ export default function CreateEventPage() {
 }
 ```
 
-## Kesimpulan
+## 11. Panduan Implementasi Layout
 
-Panduan ini menyediakan struktur dan pola yang jelas untuk layout dan halaman di MyArchery Platform. Dengan mengikuti panduan ini, tim dapat memastikan konsistensi visual dan fungsional di seluruh aplikasi, meningkatkan user experience dan maintainability kode. 
+Konsistensi layout dan behavior antara fitur-fitur yang memiliki role yang sama adalah hal kritis untuk memastikan UX yang baik dan menjaga kejelasan arsitektur aplikasi. Dokumen ini menjelaskan cara yang benar untuk mengimplementasikan layout untuk role berbeda di MyArchery Platform.
 
-Layout yang baik adalah fondasi dari UI/UX yang baik—mari kita pastikan aplikasi MyArchery menyediakan pengalaman yang intuitif, efisien, dan menyenangkan bagi seluruh pengguna, dari admin hingga atlet.
+### Prinsip Dasar Layout Role-Based
+
+1. **Layout Inheritance Hierarchy**
+   - Layout didefinisikan pada level role, bukan pada level fitur
+   - Fitur-fitur baru harus mewarisi layout dari role terkait
+   - Tidak boleh ada nested layouts yang redundan
+
+2. **Single Source of Truth untuk Layout**
+   - Setiap role memiliki **satu** layout definisi yang menjadi referensi
+   - Dashboard layout untuk setiap role adalah acuan utama
+   - Layout fitur lain harus menggunakan layout yang sama dengan dashboard
+
+3. **Sidebar Consistency**
+   - Sidebar width, behavior, dan transisi harus konsisten di semua fitur
+   - State sidebar (collapsed, expanded, hidden) harus sinkron di semua fitur
+
+### Struktur Layout yang Benar
+
+```
+app/(roles)/[role]/layout.tsx       # Layout utama untuk role (CORRECT ✓)
+    └── [feature]/page.tsx          # Konten untuk feature, tidak memiliki layout sendiri
+```
+
+**BUKAN**:
+
+```
+app/(roles)/[role]/layout.tsx       # Layout utama untuk role
+    └── [feature]/                  # INCORRECT ✗
+        ├── layout.tsx              # Redundant nested layout
+        └── page.tsx
+```
+
+### Implementasi yang Benar vs. Salah
+
+#### ✅ BENAR:
+1. Definisikan **satu layout** per role di `app/(roles)/[role]/layout.tsx`
+2. Layout role mengimpor layout component dari feature dashboard:
+   ```tsx
+   // app/(roles)/organizer/layout.tsx
+   import { OrganizerLayout } from "@/features/dashboard/adapters/organizer/components/OrganizerLayout";
+   
+   export default function OrganizerLayoutPage({
+     children,
+   }: {
+     children: React.ReactNode;
+   }) {
+     return <OrganizerLayout>{children}</OrganizerLayout>;
+   }
+   ```
+
+3. Pages di features lain hanya mendefinisikan konten, tanpa layout tambahan:
+   ```tsx
+   // app/(roles)/organizer/events/page.tsx
+   import { EventsManagementAdapter } from "@/features/event-management/adapters/organizer/EventsManagementAdapter";
+   
+   export default function EventsPage() {
+     return <EventsManagementAdapter />;
+   }
+   ```
+
+#### ❌ SALAH:
+1. Mendefinisikan layout tambahan di feature level:
+   ```tsx
+   // app/(roles)/organizer/events/layout.tsx - JANGAN LAKUKAN INI
+   import { OrganizerEventsLayout } from "@/features/event-management/adapters/organizer/components/OrganizerEventsLayout";
+   
+   export default function OrganizerEventsLayoutWrapper({
+     children,
+   }: {
+     children: React.ReactNode;
+   }) {
+     return <OrganizerEventsLayout>{children}</OrganizerEventsLayout>;
+   }
+   ```
+
+2. Duplikasi layout dengan behavior yang berbeda:
+   ```tsx
+   // features/event-management/adapters/organizer/components/OrganizerEventsLayout.tsx - JANGAN LAKUKAN INI
+   export default function OrganizerEventsLayout({ children }) {
+     // Layout ini menduplikasi OrganizerLayout dengan implementasi berbeda
+     return (
+       <div className="different-layout-structure">
+         <Sidebar />
+         <main>{children}</main>
+       </div>
+     );
+   }
+   ```
+
+### Sidebar State Management
+
+Sidebar state harus konsisten di seluruh aplikasi. Implementasi yang benar:
+
+1. Gunakan **shared context** untuk state sidebar:
+   ```tsx
+   // contexts/sidebar-context/index.tsx
+   export const SidebarContext = createContext({
+     isCollapsed: false,
+     isHidden: false,
+     setIsCollapsed: () => {},
+     setIsHidden: () => {},
+   });
+   
+   export function SidebarProvider({ children }) {
+     // State implementation...
+     return (
+       <SidebarContext.Provider value={sidebarState}>
+         {children}
+       </SidebarContext.Provider>
+     );
+   }
+   ```
+
+2. Main content harus responsive terhadap sidebar state:
+   ```tsx
+   function MainContent({ children }) {
+     const { isCollapsed, isHidden } = useSidebar();
+     
+     // Get appropriate margin class based on sidebar state
+     const getMarginClass = () => {
+       if (isHidden) return "ml-1";
+       if (isCollapsed) return "ml-16";
+       return "ml-64";
+     };
+     
+     return (
+       <main className={`${getMarginClass()} transition-all duration-200`}>
+         {children}
+       </main>
+     );
+   }
+   ```
+
+### Menangani Rute Dalam Layout
+
+Karena semua halaman berbagi layout yang sama, gunakan route segment untuk mendeteksi halaman aktif:
+
+```tsx
+function OrganizerNavItems() {
+  const pathname = usePathname();
+  
+  return (
+    <nav>
+      {navItems.map((item) => {
+        // Check if current route matches this nav item
+        const isActive = pathname === item.href || 
+                         pathname.startsWith(`${item.href}/`);
+        
+        return (
+          <Link 
+            href={item.href}
+            className={isActive ? "active-class" : "inactive-class"}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+```
+
+### Checklist Implementasi Layout
+
+Ketika membuat fitur baru, verifikasi bahwa:
+
+- [ ] **Tidak** membuat layout baru untuk fitur ini
+- [ ] Menggunakan layout role yang sudah ada
+- [ ] Jika fitur membutuhkan lebar konten atau padding khusus, terapkan hanya pada component-level, bukan dengan layout baru
+- [ ] Layout responsif terhadap state sidebar (collapsed, expanded, hidden)
+- [ ] Sidebar dan navigation item menyorot item yang tepat berdasarkan route
+
+### Resolusi Untuk Masalah Umum
+
+1. **Jarak/Margin Tidak Konsisten**
+   - Pastikan semua konten menggunakan ukuran margin yang sama (`ml-64`, `ml-16`, `ml-1`)
+   - Jangan tambahkan margin tambahan di level container
+
+2. **Behavior Sidebar Berbeda**
+   - Gunakan context yang sama (`SidebarContext`) di semua komponen
+   - Pastikan class dan transisi CSS konsisten
+
+3. **Layout Nesting Redundan**
+   - Hapus layout di level fitur jika sudah ada layout di level role
+
+4. **Implementasi Fitur Baru**
+   - Selalu mulai dengan mempelajari layout dashboard sebagai referensi
+   - Gunakan pattern dan struktur yang sama
+
+Dengan mengikuti pedoman ini, kita dapat memastikan konsistensi layout di seluruh platform MyArchery, memberikan pengalaman yang mulus bagi pengguna dan menjaga arsitektur yang bersih.
+
+## 14. Pedoman Implementasi Layout yang Konsisten
+
+Berdasarkan pengalaman mengatasi masalah layout di berbagai fitur, berikut adalah pedoman komprehensif untuk implementasi layout yang konsisten dan maintainable.
+
+### 14.1 Prinsip Dasar Layout Next.js App Router
+
+Next.js App Router memberikan mekanisme layout yang sangat kuat, tetapi juga memerlukan disiplin dan pemahaman yang jelas tentang hierarki layout. Prinsip-prinsip berikut akan membantu mengoptimalkan struktur aplikasi:
+
+1. **Hierarki Layout yang Jelas**
+   - Layout didefinisikan di level tertinggi yang sesuai, tidak lebih rendah
+   - Layout harus mewarisi ke semua halaman di bawahnya
+   - **Hindari nested layouts** yang memberikan fungsionalitas yang sama
+
+2. **Role Layout sebagai Single Source of Truth**
+   - Layout untuk role tertentu (`admin`, `organizer`, `customer`) didefinisikan di level role
+   - Contoh yang tepat: `app/(roles)/[role]/layout.tsx`
+   - Layout ini merupakan satu-satunya tempat yang mendefinisikan struktur utama UI untuk role tersebut
+
+3. **Feature Pages Fokus pada Konten**
+   - Pages (`page.tsx`) harus fokus pada konten spesifik feature
+   - Pages **tidak perlu tahu** tentang layout, sidebar, atau navigasi
+   - Gunakan adapter pattern untuk menghubungkan domain logic dengan UI
+
+### 14.2 Struktur Layout yang Benar
+
+```
+app/(roles)/
+  ├── admin/
+  │   ├── layout.tsx            # Definisi layout admin (✓ BENAR)
+  │   ├── page.tsx              # Admin landing page
+  │   └── [feature]/
+  │       └── page.tsx          # Feature page
+  │       # TIDAK perlu layout.tsx di sini
+  │
+  ├── organizer/
+  │   ├── layout.tsx            # Definisi layout organizer (✓ BENAR)
+  │   ├── page.tsx              # Organizer landing page
+  │   └── [feature]/
+  │       └── page.tsx          # Feature page
+  │       # TIDAK perlu layout.tsx di sini
+  │
+  └── customer/
+      ├── layout.tsx            # Definisi layout customer (✓ BENAR)
+      ├── page.tsx              # Customer landing page
+      └── [feature]/
+          └── page.tsx          # Feature page
+          # TIDAK perlu layout.tsx di sini
+```
+
+### 14.3 Implementasi Layout Role yang Benar
+
+```tsx
+// app/(roles)/organizer/layout.tsx
+import { OrganizerLayout } from "@/features/dashboard/adapters/organizer/components/OrganizerLayout";
+
+export default function OrganizerLayoutPage({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <OrganizerLayout>{children}</OrganizerLayout>;
+}
+```
+
+```tsx
+// features/dashboard/adapters/organizer/components/OrganizerLayout.tsx
+"use client";
+
+import { ReactNode } from "react";
+import { SidebarProvider } from "@/contexts/sidebar-context";
+import OrganizerSidebar from "./OrganizerSidebar";
+import OrganizerLayoutContent from "./OrganizerLayoutContent";
+
+interface OrganizerLayoutProps {
+  children: ReactNode;
+}
+
+export function OrganizerLayout({ children }: Readonly<OrganizerLayoutProps>) {
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-slate-50">
+        <OrganizerSidebar />
+        <OrganizerLayoutContent>
+          {children}
+        </OrganizerLayoutContent>
+      </div>
+    </SidebarProvider>
+  );
+}
+```
+
+```tsx
+// features/dashboard/adapters/organizer/components/OrganizerLayoutContent.tsx
+"use client";
+
+import { ReactNode, useEffect, useState } from "react";
+import { useSidebar } from "@/contexts/sidebar-context";
+
+interface OrganizerLayoutContentProps {
+  children: ReactNode;
+}
+
+export default function OrganizerLayoutContent({ 
+  children 
+}: Readonly<OrganizerLayoutContentProps>) {
+  const { isCollapsed, isHidden } = useSidebar();
+  const [initialLoad, setInitialLoad] = useState(true);
+  
+  // Skip initial animation when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoad(false);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Calculate the appropriate margin based on sidebar state
+  const getMainMarginClass = () => {
+    if (isHidden) return "ml-1";
+    if (isCollapsed) return "ml-16";
+    return "ml-64";
+  };
+
+  const marginClass = getMainMarginClass();
+  const transitionClasses = initialLoad ? "" : "transition-all duration-200 ease-out";
+  
+  return (
+    <main className={`flex-1 ${marginClass} p-6 ${transitionClasses}`}>
+      {children}
+    </main>
+  );
+}
+```
+
+### 14.4 Masalah Umum dan Solusinya
+
+#### 1. Nested Layout Redundan
+**Masalah**: File `layout.tsx` di level feature yang membungkus konten dengan layout tambahan.
+
+```tsx
+// ⛔ SALAH: app/(roles)/organizer/events/layout.tsx
+import { OrganizerEventsLayout } from "@/features/event-management/adapters/organizer/components";
+
+export default function OrganizerEventsLayoutWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <OrganizerEventsLayout>{children}</OrganizerEventsLayout>;
+}
+```
+
+**Solusi**:
+1. **Hapus file layout.tsx** di level feature jika memungkinkan (preferred)
+2. Atau, jika diperlukan untuk tujuan routing, modifikasi untuk hanya meneruskan children:
+
+```tsx
+// ✅ BENAR: app/(roles)/organizer/events/layout.tsx
+export default function OrganizerEventsLayoutWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
+}
+```
+
+#### 2. Margin dan Spacing Inkonsisten
+**Masalah**: Main content tidak responsif terhadap sidebar state, atau menggunakan margin yang berbeda.
+
+**Solusi**: Pastikan semua komponen LayoutContent menggunakan perhitungan margin yang konsisten:
+
+```tsx
+// Konsisten di seluruh role dan feature
+const getMainMarginClass = () => {
+  if (isHidden) return "ml-1";    // Hidden sidebar width: 4px
+  if (isCollapsed) return "ml-16"; // Collapsed sidebar width: 64px
+  return "ml-64";                 // Expanded sidebar width: 256px
+};
+```
+
+#### 3. Duplikasi Komponen Sidebar
+**Masalah**: Beberapa feature mendefinisikan dan menggunakan sidebar mereka sendiri.
+
+**Solusi**: 
+1. Gunakan satu sumber komponen sidebar dari feature dashboard
+2. Import dan gunakan komponen tersebut di seluruh aplikasi:
+
+```tsx
+// ✅ BENAR: Menggunakan sidebar dari feature dashboard
+import OrganizerSidebar from "@/features/dashboard/adapters/organizer/components/OrganizerSidebar";
+```
+
+#### 4. Transisi yang Tidak Konsisten
+**Masalah**: Behavior transisi berbeda antara feature saat sidebar berubah state.
+
+**Solusi**: Gunakan property transisi yang identik di semua layout:
+
+```tsx
+// ✅ BENAR: Konsisten di semua komponen layout
+const transitionClasses = initialLoad ? "" : "transition-all duration-200 ease-out";
+```
+
+### 14.5 Checklist Validasi Layout
+
+Gunakan checklist ini untuk memverifikasi konsistensi layout di seluruh aplikasi:
+
+- [ ] **Layout Hierarchy**: Layout didefinisikan hanya di level role, tidak ada nested layouts
+- [ ] **Sidebar Component**: Semua feature menggunakan komponen sidebar yang sama
+- [ ] **Sidebar State**: State sidebar (expanded, collapsed, hidden) konsisten di seluruh aplikasi
+- [ ] **Margins & Spacing**: Main content margin responsif terhadap sidebar state
+- [ ] **Transitions**: Transisi visual konsisten ketika sidebar berubah state
+- [ ] **Route Detection**: Active route detection menggunakan pattern yang sama di seluruh aplikasi
+- [ ] **Mobile Responsiveness**: Semua layout menangani mobile view dengan cara yang konsisten
+
+### 14.6 Saat Membuat Feature Baru
+
+1. **Langkah Persiapan**:
+   - Pelajari layout role terkait di dashboard sebagai referensi
+   - Identifikasi pola dan behavior yang perlu direplikasi
+   - Teliti cara sidebar merespons perubahan state
+
+2. **Langkah Implementasi**:
+   - Buat file `page.tsx` untuk feature baru
+   - **JANGAN** membuat file `layout.tsx` baru
+   - Lakukan kustomisasi hanya di level page component
+
+3. **Testing dan Validasi**:
+   - Verifikasi behavior UI di berbagai viewport
+   - Uji dengan berbagai state sidebar
+   - Bandingkan dengan implementasi dashboard untuk memastikan konsistensi
+
+### 14.7 Migrasi Layout yang Tidak Konsisten
+
+Jika menemukan inconsistent layout pada feature yang sudah ada, ikuti langkah-langkah berikut:
+
+1. **Identifikasi Root Cause**:
+   - Periksa ada/tidaknya file `layout.tsx` di level feature
+   - Periksa komponen layout yang mungkin menduplikasi sidebar
+   - Bandingkan struktur markup dan margin dengan layout dashboard
+
+2. **Langkah Perbaikan**:
+   - Hapus layout redundan
+   - Gunakan komponen layout yang sudah ada
+   - Pastikan semua pages di feature terkait tetap berfungsi
+
+3. **Validasi Hasil**:
+   - Verifikasi bahwa sidebar behavior konsisten
+   - Pastikan tidak ada regresi visual atau fungsional
+   - Cek responsivitas dan transisi
+
+Dengan mengikuti pedoman dan pola ini, aplikasi akan memiliki struktur layout yang konsisten, maintainable, dan memberikan pengalaman pengguna yang mulus di seluruh feature. Konsistensi ini juga akan memudahkan onboarding developer baru dan pengembangan feature di masa depan.

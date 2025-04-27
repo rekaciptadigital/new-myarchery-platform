@@ -22,6 +22,7 @@
 10. [Panduan Implementasi Feature Baru](#10-panduan-implementasi-feature-baru)
 11. [Testing dan Quality Assurance](#11-testing-dan-quality-assurance)
 12. [Best Practices](#12-best-practices)
+13. [Konsistensi Layout dalam Role Adaptation](#13-konsistensi-layout-dalam-role-adaptation)
 
 ## 1. Pendahuluan
 
@@ -982,14 +983,155 @@ describe('EventAdminAdapter', () => {
   - Responsif di seluruh device/viewport
   - Dapat di-reuse tanpa side effects
 
-## Kesimpulan
+## 13. Konsistensi Layout dalam Role Adaptation
 
-Arsitektur Domain-Driven Modular dengan Role Adaptation Layer dan Supabase Integration memberikan fondasi yang kuat untuk MyArchery Platform. Pendekatan ini mendukung:
+Memastikan konsistensi layout antar fitur dengan role yang sama adalah aspek kritis dalam arsitektur ini.
 
-- **Skalabilitas**: Struktur modular memudahkan penambahan fitur baru
-- **Maintainability**: Pemisahan concerns yang jelas memudahkan maintenance
-- **Reusability**: Core logic yang sama digunakan di berbagai roles
-- **Optimasi User Experience**: UX yang dioptimalkan per role melalui adapters
-- **Kinerja Tim**: Tim dapat bekerja secara independen di features yang berbeda
+### 13.1 Prinsip Layout Inheritance
 
-Dengan mengikuti panduan ini, developer dapat memanfaatkan kerangka yang konsisten sambil mempertahankan fleksibilitas dalam implementasi detail.
+1. **Single Source of Truth untuk Layout**
+   - Setiap role (admin, organizer, customer) memiliki **satu** layout definisi yang menjadi referensi
+   - Layout didefinisikan **hanya** di `app/(roles)/[role]/layout.tsx`
+   - Layout ini menggunakan komponen layout dari feature dashboard (feature referensi)
+   ```tsx
+   // app/(roles)/organizer/layout.tsx
+   import { OrganizerLayout } from "@/features/dashboard/adapters/organizer/components/OrganizerLayout";
+   
+   export default function OrganizerLayoutPage({
+     children,
+   }: {
+     children: React.ReactNode;
+   }) {
+     return <OrganizerLayout>{children}</OrganizerLayout>;
+   }
+   ```
+
+2. **Avoid Nested Layouts**
+   - **TIDAK boleh ada** nested layout di level fitur (`app/(roles)/[role]/[feature]/layout.tsx`)
+   - Features hanya mendefinisikan konten melalui page.tsx, **bukan** layout tambahan
+   - Jika terdapat `layout.tsx` di level fitur, sebaiknya **hanya meneruskan children tanpa membungkusnya**
+   ```tsx
+   // app/(roles)/organizer/events/layout.tsx - Jika memang diperlukan
+   export default function OrganizerEventsLayoutWrapper({
+     children,
+   }: {
+     children: React.ReactNode;
+   }) {
+     // Tidak membungkus dengan layout tambahan
+     return <>{children}</>;
+   }
+   ```
+
+3. **Struktur Layout yang Benar vs. Salah**
+   - ✅ **BENAR:**
+     ```
+     app/(roles)/[role]/layout.tsx       # Layout definisi tunggal
+         └── [feature]/page.tsx          # Hanya konten, tanpa layout
+     ```
+   
+   - ❌ **SALAH:**
+     ```
+     app/(roles)/[role]/layout.tsx       # Layout utama
+         └── [feature]/                  
+             ├── layout.tsx              # Layout nested (redundant)
+             └── page.tsx                
+     ```
+
+### 13.2 Implementasi Sidebar Konsisten
+
+1. **Centralized Sidebar State**
+   - State sidebar (collapsed, expanded, hidden) dikelola melalui context
+   - Semua feature mengakses state yang sama melalui hooks
+   ```tsx
+   // contexts/sidebar-context/index.tsx
+   export const SidebarContext = createContext({
+     isCollapsed: false,
+     isHidden: false,
+     setIsCollapsed: () => {},
+     setIsHidden: () => {},
+   });
+   ```
+
+2. **Margin dan Spacing Konsisten**
+   - Main content harus responsif terhadap sidebar state dengan margin yang konsisten
+   - Gunakan nilai margin yang standar:
+     - Sidebar expanded: `ml-64` (sidebar width 256px)
+     - Sidebar collapsed: `ml-16` (sidebar width 64px)
+     - Sidebar hidden: `ml-1` (sidebar width 4px)
+   
+   ```tsx
+   function MainContent({ children }) {
+     const { isCollapsed, isHidden } = useSidebar();
+     
+     // Calculate appropriate margin based on sidebar state
+     const getMainMarginClass = () => {
+       if (isHidden) return "ml-1";
+       if (isCollapsed) return "ml-16";
+       return "ml-64";
+     };
+     
+     return (
+       <main className={`flex-1 ${getMainMarginClass()} p-6 transition-all duration-200`}>
+         {children}
+       </main>
+     );
+   }
+   ```
+
+### 13.3 Resolusi Masalah Layout Inkonsisten
+
+1. **Diagnosis Layout Redundan**
+   - Periksa struktur folder untuk menemukan nested layouts
+   - Identifikasi file `layout.tsx` di level fitur yang membungkus konten dengan layout tambahan
+   - Periksa komponen-komponen yang mungkin menduplikasi sidebar atau struktur layout
+
+2. **Langkah Perbaikan**
+   - Hapus file `layout.tsx` di level fitur jika memungkinkan
+   - Atau, modifikasi file tersebut untuk hanya meneruskan children tanpa wrapping
+   - Refaktor komponen yang menduplikasi sidebar untuk menggunakan sidebar yang terpusat
+
+3. **Validasi Konsistensi**
+   - Verifikasi bahwa main content margin merespons dengan benar terhadap state sidebar
+   - Pastikan tidak ada layout yang bersarang atau sidebar yang terduplikasi
+   - Cek konsistensi visual antar fitur dengan role yang sama
+
+### 13.4 Best Practices dan Panduan
+
+1. **Saat Membuat Feature Baru**
+   - **JANGAN** membuat layout baru di level fitur
+   - Gunakan dashboard sebagai referensi layout untuk setiap role
+   - Reuse komponen layout dari feature dashboard
+   - Jika perlu kostumisasi khusus, lakukan di level page component, bukan dengan layout baru
+
+2. **Pengembangan Komponen UI**
+   - Komponen UI spesifik fitur harus menyesuaikan diri dengan layout parent
+   - Hindari hard-coding margin yang mungkin bertentangan dengan layout utama
+   - Gunakan CSS yang responsif terhadap sidebar state melalui context
+
+3. **Rute dan Navigasi**
+   - Konsistensi pengelolaan route active state di sidebar antar fitur
+   - Gunakan pattern yang sama untuk mendeteksi route aktif
+   ```tsx
+   function SidebarNavItems() {
+     const pathname = usePathname();
+     
+     return (
+       <nav>
+         {navItems.map((item) => {
+           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+           
+           return (
+             <Link 
+               href={item.href}
+               className={isActive ? "active-nav-class" : "inactive-nav-class"}
+             >
+               {item.label}
+             </Link>
+           );
+         })}
+       </nav>
+     );
+   }
+   ```
+
+Dengan mematuhi prinsip-prinsip ini, aplikasi akan memiliki pengalaman pengguna yang konsisten di seluruh fitur untuk setiap role, sekaligus mempertahankan arsitektur yang bersih dan mudah di-maintain.
