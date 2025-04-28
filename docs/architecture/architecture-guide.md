@@ -23,6 +23,7 @@
 11. [Testing dan Quality Assurance](#11-testing-dan-quality-assurance)
 12. [Best Practices](#12-best-practices)
 13. [Konsistensi Layout dalam Role Adaptation](#13-konsistensi-layout-dalam-role-adaptation)
+14. [Model-Driven Architecture](#14-model-driven-architecture)
 
 ## 1. Pendahuluan
 
@@ -1042,7 +1043,7 @@ Memastikan konsistensi layout antar fitur dengan role yang sama adalah aspek kri
 1. **Centralized Sidebar State**
    - State sidebar (collapsed, expanded, hidden) dikelola melalui context
    - Semua feature mengakses state yang sama melalui hooks
-   ```tsx
+   ```typescript
    // contexts/sidebar-context/index.tsx
    export const SidebarContext = createContext({
      isCollapsed: false,
@@ -1135,3 +1136,242 @@ Memastikan konsistensi layout antar fitur dengan role yang sama adalah aspek kri
    ```
 
 Dengan mematuhi prinsip-prinsip ini, aplikasi akan memiliki pengalaman pengguna yang konsisten di seluruh fitur untuk setiap role, sekaligus mempertahankan arsitektur yang bersih dan mudah di-maintain.
+
+## 14. Model-Driven Architecture
+
+Panduan ini memperjelas pendekatan model-driven yang digunakan dalam arsitektur MyArchery Platform, dengan fokus pada perbedaan antara model domain dan subfeature.
+
+### 14.1 Domain Model vs Subfeature
+
+#### Definisi
+
+- **Domain Model**: Representasi data dan logika bisnis yang merupakan entitas domain utama (Tournament, Event, Category, dll).
+- **Subfeature**: Fungsionalitas UI dan layanan spesifik yang mengimplementasikan cara berinteraksi dengan model domain.
+
+Dalam pendekatan model-driven:
+- Model domain menjadi entitas sentral 
+- Subfeature dianggap sebagai implementasi UI terhadap model domain
+
+#### Contoh
+
+```
+Event (Domain Model)
+├── Tournament (Domain Model)
+│   ├── Category (Domain Model)
+│   │   └── Participant (Domain Model) 
+```
+
+Hubungan antar model ini adalah relasi domain bisnis, bukan relasi teknikal antar subfeature.
+
+### 14.2 Reorganisasi Struktur Feature
+
+Struktur feature berbasis model diorganisir sebagai berikut:
+
+```
+/features/event-management/
+  /core/
+    /models/              # Domain models
+      event.ts            # Model Event
+      tournament.ts       # Model Tournament
+      category.ts         # Model Category
+      participant.ts      # Model Participant
+      
+    /services/            # Business logic untuk model
+      event-service.ts    # Service untuk Event
+      tournament-service.ts # Service untuk Tournament
+      category-service.ts # Service untuk Category
+      
+    /repositories/        # Interface untuk data access
+      event-repository.ts
+      tournament-repository.ts
+      
+  /adapters/              # UI implementations
+    /admin/
+      EventAdminAdapter.tsx
+      TournamentAdminAdapter.tsx
+      CategoryAdminAdapter.tsx
+      
+    /organizer/
+      EventOrganizerAdapter.tsx
+      TournamentOrganizerAdapter.tsx
+```
+
+### 14.3 Model Implementation
+
+Domain model mengimplementasikan entitas bisnis dengan tipe dan metode domain:
+
+```typescript
+// features/event-management/core/models/tournament.ts
+export interface TournamentFormData {
+  id?: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  description?: string;
+  location?: string;
+  categories: CategoryReference[];
+  settings: TournamentSettings;
+}
+
+export interface TournamentSettings {
+  registrationDeadline: string;
+  maxParticipants?: number;
+  scoringSystem: "cumulative" | "elimination" | "custom";
+}
+
+export type CategoryReference = {
+  id: string;
+  name: string;
+};
+
+// Domain methods
+export function createEmptyTournament(): TournamentFormData {
+  return {
+    name: "",
+    startDate: "",
+    endDate: "",
+    categories: [],
+    settings: {
+      registrationDeadline: "",
+      scoringSystem: "cumulative"
+    }
+  };
+}
+```
+
+### 14.4 Service Implementation
+
+Service mengelola logika bisnis terkait model domain:
+
+```typescript
+// features/event-management/core/services/tournament-service.ts
+import { TournamentFormData } from "../models/tournament";
+import { tournamentRepository } from "../repositories/tournament-repository";
+
+export class TournamentService {
+  static async getTournamentById(id: string): Promise<TournamentFormData> {
+    return tournamentRepository.findById(id);
+  }
+  
+  static async createTournament(data: TournamentFormData): Promise<string> {
+    // Validasi dan business rules
+    if (new Date(data.startDate) > new Date(data.endDate)) {
+      throw new Error("Start date cannot be after end date");
+    }
+    
+    return tournamentRepository.create(data);
+  }
+  
+  static async updateTournament(id: string, data: TournamentFormData): Promise<void> {
+    return tournamentRepository.update(id, data);
+  }
+}
+```
+
+### 14.5 Adapter Implementation
+
+Adapter menghubungkan model domain dengan UI spesifik berdasarkan role:
+
+```typescript
+// features/event-management/adapters/admin/TournamentAdminAdapter.tsx
+import React from 'react';
+import { TournamentService } from '../../core/services/tournament-service';
+import { TournamentFormData, createEmptyTournament } from '../../core/models/tournament';
+
+interface TournamentAdminAdapterProps {
+  readonly eventId: string;      // Parent event ID
+  readonly tournamentId?: string; // Optional for create new scenario
+}
+
+export function TournamentAdminAdapter({
+  eventId,
+  tournamentId
+}: TournamentAdminAdapterProps) {
+  const [tournamentData, setTournamentData] = React.useState<TournamentFormData | null>(
+    tournamentId ? null : createEmptyTournament()
+  );
+  
+  // Implementasi fetch, update, UI rendering
+}
+```
+
+### 14.6 Prinsip Implementasi Model-Driven
+
+1. **Relationship First** - Tentukan hubungan antar model terlebih dahulu sebelum implementasi UI
+2. **Model Agnostic UI** - UI harus beradaptasi terhadap model, bukan sebaliknya
+3. **Core Domain Isolation** - Model domain harus independen dari lapisan UI
+4. **Business Logic Centralization** - Logika bisnis terletak dalam service, bukan UI
+5. **Role-Specific Presentation** - Adapter menghandel role-specific implementation
+
+### 14.7 Panduan Konversi dari Subfeature ke Model-Driven
+
+Untuk project yang sudah menggunakan struktur subfeature, berikut langkah konversi:
+
+1. **Identifikasi Model Domain Utama**
+   - Review subfeature dan ekstrak model domain yang mendasarinya
+   - Definisikan relasi antar model
+
+2. **Restrukturisasi Folder**
+   - Pindahkan model dari subfeature ke core/models
+   - Pindahkan service dari subfeature ke core/services
+   - Pertahankan adapter di adapter role yang sesuai
+
+3. **Update Imports**
+   - Update semua import path yang terdampak
+
+4. **Migrasi UI Components**
+   - Migrasi UI Components ke adapter role yang sesuai
+   - Pastikan semua components menggunakan service core
+
+5. **Validasi**
+   - Pastikan semua fitur tetap berfungsi dengan benar
+   - Verifikasi bahwa model domain terpisah dengan jelas dari UI
+
+### 14.8 Contoh Kategori Event Types
+
+Kategori Event dalam MyArchery adalah contoh sempurna dari model domain:
+
+```typescript
+// features/event-management/core/models/category.ts
+export enum CategoryType {
+  RECURVE = "recurve",
+  COMPOUND = "compound",
+  TRADITIONAL = "traditional",
+  BAREBOW = "barebow",
+  NASIONAL = "nasional"
+}
+
+export interface CategorySettings {
+  distanceInMeters: number;
+  maxArrows: number;
+  scoringSystem: "cumulative" | "elimination";
+  minParticipants?: number;
+  maxParticipants?: number;
+  ageRestriction?: {
+    minAge?: number;
+    maxAge?: number;
+  };
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  type: CategoryType;
+  settings: CategorySettings;
+  tournamentId: string;
+}
+```
+
+Implementasi ini menunjukkan bagaimana CategoryType menjadi model domain yang mendeskripsikan variasi dari entitas Category, bukan sebagai subfeature terpisah.
+
+### 14.9 Kesimpulan
+
+Pendekatan model-driven menawarkan keunggulan:
+
+1. **Maintainability Lebih Baik** - Model domain yang jelas mempermudah pemeliharaan
+2. **Fokus Bisnis Yang Tepat** - Struktur kode mencerminkan domain bisnis 
+3. **Testability** - Model dan service lebih mudah diuji secara terpisah
+4. **Reusability** - Model domain dapat digunakan di berbagai adapter
+5. **Onboarding** - Developer baru lebih mudah memahami domain bisnis
+
+Dengan mengikuti pendekatan ini, struktur aplikasi akan lebih mencerminkan domain bisnis yang sesungguhnya dan mengurangi kompleksitas serta redundansi dalam implementasi.

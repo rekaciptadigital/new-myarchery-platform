@@ -5,6 +5,17 @@
 import { TournamentFormData } from '../models/tournament';
 
 export class TournamentService {
+  static publishTournament() {
+    throw new Error('Method not implemented.');
+  }
+  static updateTournament(tournamentId: string, formData: TournamentFormData) {
+    const service = new TournamentService();
+    return service.updateTournament(tournamentId, formData);
+  }
+  static createTournament(formData: TournamentFormData): string | PromiseLike<string> {
+    const service = new TournamentService();
+    return service.createTournament(formData);
+  }
   /**
    * Create a new tournament with the provided form data
    * @param tournamentData The tournament form data
@@ -143,6 +154,68 @@ export class TournamentService {
     } catch (error) {
       console.error('Error publishing tournament:', error);
       throw new Error('Failed to publish tournament');
+    }
+  }
+
+  /**
+   * Get tournament by ID - static method for direct access
+   * @param id ID of the tournament to retrieve
+   * @returns Promise with the tournament data
+   */
+  static async getTournamentById(id: string): Promise<TournamentFormData> {
+    try {
+      // For production, uncomment this to use axios
+      // const response = await axios.get(`/api/tournaments/${id}`);
+      // return response.data;
+      
+      // For development/mock implementation
+      console.log(`Fetching tournament ${id}`);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Return mock data conforming to TournamentFormData
+      return {
+        name: `Mock Tournament ${id}`,
+        description: 'This is a mock description for the tournament.',
+        startDate: "2025-10-01",
+        endDate: "2025-10-05",
+        registrationStartDate: "2025-08-01",
+        registrationEndDate: "2025-09-15",
+        eventType: "individual", 
+        logo: null, 
+        bannerImage: null, 
+        featuredImage: null,
+        locationType: "offline", 
+        address: "Mock Venue Address",
+        city: "Mock City",
+        province: "Mock Province",
+        venue: "Mock Venue Name", 
+        venueDetails: "Mock venue details",
+        googleMapsUrl: "",
+        onlineLink: "", 
+        pricingType: "single", 
+        singlePrice: { price: 150000, currency: "IDR" }, 
+        multiPricing: [], 
+        earlyBird: { enabled: false, discount: 0, endDate: "" }, 
+        lateRegistration: { enabled: false, fee: 0, startDate: "" }, 
+        maxParticipants: 200, 
+        quotaType: "total", 
+        categoryQuotas: [], 
+        ageCategories: [], 
+        generalRules: "Mock general rules.",
+        technicalRules: "Mock technical rules.",
+        dressCode: "Mock dress code.",
+        requireDocumentUpload: false,
+        documentRequirements: [],
+        schedule: "Mock schedule details.",
+        termsAndConditions: "Mock terms and conditions.",
+        requireTermsAcceptance: true,
+        status: "published"
+      };
+    } catch (error) {
+      console.error('Error fetching tournament:', error);
+      throw error;
     }
   }
 }
