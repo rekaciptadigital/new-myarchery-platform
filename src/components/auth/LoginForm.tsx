@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { UserRole } from "@/features/auth/models/user"; // Import the UserRole enum
+import { useAuth } from "@/contexts/auth-context";
 
 interface LoginFormProps {
   isAdminLogin?: boolean;
@@ -15,11 +16,14 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Readonly<LoginFormProps>) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const { error: authError, isLoading, clearError, login } = useAuth();
+  const [formError, setFormError] = useState("");
+
+  // Combine errors from auth context and form validation
+  const error = authError ?? formError;
 
   // Set button color based on login type
   const getButtonClass = () => {
@@ -28,30 +32,46 @@ export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Rea
     return "bg-blue-600 hover:bg-blue-700"; // default for organizer
   };
 
+  // Determine the user role based on login form type
+  const getUserRole = (): UserRole => {
+    if (isAdminLogin) return UserRole.ADMIN;
+    if (isCustomerLogin) return UserRole.CUSTOMER;
+    return UserRole.ORGANIZER;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
+    setFormError("");
+    clearError();
+    
+    // Form validation - still require some input for UX purposes
+    if (!email || !password) {
+      setFormError("Email dan password harus diisi");
+      return;
+    }
+    
     try {
-      // Simulasi login
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // DEVELOPMENT MODE: Skip actual authentication and just redirect
+      console.log('DEVELOPMENT MODE: Bypassing authentication for UI development');
       
-      // Redirect berdasarkan tipe login
-      if (isAdminLogin) {
-        // Admin login akan diarahkan ke dashboard admin
-        router.push("/admin/dashboard");
-      } else if (isCustomerLogin) {
-        // Customer login akan diarahkan ke dashboard customer
-        router.push("/customer/dashboard");
-      } else {
-        // Organizer login akan diarahkan ke dashboard organizer
-        router.push("/organizer/dashboard");
-      }
-    } catch {
-      setError("Login gagal. Periksa email dan password Anda.");
-    } finally {
-      setIsLoading(false);
+      // Instead of setting isLoading manually, use the auth context's login
+      // which will handle the loading state internally
+      const role = getUserRole();
+      await login(email, password, role);
+      
+      // Navigate after successful login
+      setTimeout(() => {
+        if (isAdminLogin) {
+          window.location.href = "/admin/dashboard";
+        } else if (isCustomerLogin) {
+          window.location.href = "/customer/dashboard";
+        } else {
+          window.location.href = "/organizer/dashboard";
+        }
+      }, 800);
+      
+    } catch (err) {
+      console.error("Login error:", err);
     }
   };
 
@@ -88,7 +108,13 @@ export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Rea
             type="email"
             placeholder="Masukkan email atau username"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) {
+                clearError();
+                setFormError("");
+              }
+            }}
             required
             className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md"
           />
@@ -99,7 +125,13 @@ export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Rea
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) {
+                clearError();
+                setFormError("");
+              }
+            }}
             required
             className="bg-slate-100 border-slate-200 focus:bg-white focus:border-blue-500 h-12 px-4 rounded-md"
           />
@@ -107,16 +139,20 @@ export function LoginForm({ isAdminLogin = false, isCustomerLogin = false }: Rea
 
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-2">
-            <Checkbox id="remember-me" className="border-slate-300" />
+            <Checkbox 
+              id="remember-me" 
+              className="border-slate-300" 
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(!!checked)}
+            />
             <Label htmlFor="remember-me" className="font-normal text-slate-600">Ingat saya</Label>
           </div>
-          <button
-            type="button"
+          <Link
+            href="/forgot-password"
             className="font-medium text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer p-0"
-            onClick={() => window.alert("Fitur reset password akan segera tersedia")}
           >
             Lupa password?
-          </button>
+          </Link>
         </div>
 
         {error && (

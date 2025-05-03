@@ -3,6 +3,8 @@
 import { BarChart, Calendar, Home, Settings, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: <Home size={20} /> },
@@ -15,6 +17,7 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <aside className="w-64 bg-slate-800 text-white hidden md:flex flex-col min-h-screen">
@@ -50,16 +53,21 @@ export default function AdminSidebar() {
       <div className="p-4 border-t border-slate-700">
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-white font-medium">
-            A
+            {user?.displayName?.charAt(0) ?? 'A'}
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium">Admin</p>
-            <p className="text-xs text-slate-400">admin@myarchery.com</p>
+            <p className="text-sm font-medium">{user?.displayName ?? 'Admin'}</p>
+            <p className="text-xs text-slate-400">{user?.email ?? 'admin@myarchery.com'}</p>
           </div>
         </div>
-        <button className="mt-4 text-xs text-slate-300 hover:text-white w-full text-left">
+        <LogoutButton 
+          className="mt-4 text-xs text-slate-300 hover:text-white w-full text-left justify-start"
+          redirectTo="/admin/login"
+          showIcon={false}
+          variant="ghost"
+        >
           Logout
-        </button>
+        </LogoutButton>
       </div>
     </aside>
   );

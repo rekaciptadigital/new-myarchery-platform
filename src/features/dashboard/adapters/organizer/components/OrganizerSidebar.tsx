@@ -11,6 +11,8 @@ import {
   SidebarLogo, 
   MobileMenuButton 
 } from "@/components/ui/sidebar/SidebarComponents";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { useAuth } from "@/contexts/auth-context";
 
 // Define organizer-specific navigation items with correct routing paths
 const navItems = [
@@ -77,30 +79,40 @@ function OrganizerUserProfile({
   isHidden: boolean;
   isHovering: boolean;
 }>) {
+  const { user } = useAuth();
   const transitionClasses = "transition-all duration-300 ease-in-out";
+  
+  const displayName = user?.displayName ?? 'Organizer';
+  const email = user?.email ?? 'organizer@myarchery.com';
+  const firstLetter = displayName?.charAt(0) ?? 'O';
 
   return (
     <div className={`p-4 border-t border-slate-200 ${isHidden && !isHovering ? "opacity-0" : "opacity-100"} ${transitionClasses}`}>
       {isCollapsed ? (
         <div className="flex justify-center">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-            O
+            {firstLetter}
           </div>
         </div>
       ) : (
         <>
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-              O
+              {firstLetter}
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium">Perpani Organizer</p>
-              <p className="text-xs text-slate-500">perpani@example.com</p>
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-slate-500">{email}</p>
             </div>
           </div>
-          <Link href="/auth/logout" className="mt-4 text-xs text-slate-600 hover:text-slate-900 block">
+          <LogoutButton 
+            className="mt-4 text-xs text-slate-600 hover:text-slate-900 block w-full text-left justify-start"
+            redirectTo="/organizer/login"
+            showIcon={false}
+            variant="ghost"
+          >
             Logout
-          </Link>
+          </LogoutButton>
         </>
       )}
     </div>

@@ -1,853 +1,1508 @@
 # Fitur Autentikasi MyArchery Platform
 
 > **Dokumen ini dibuat pada:** 27 April 2025, 10:00 WIB  
-> **Terakhir diperbarui:** 27 April 2025, 14:35 WIB
+> **Terakhir diperbarui:** 3 May 2025, 16:45 WIB
 
 ## Daftar Isi
 1. [Gambaran Umum](#1-gambaran-umum)
-2. [Arsitektur Fitur Autentikasi](#2-arsitektur-fitur-autentikasi)
-3. [Struktur Komponen](#3-struktur-komponen)
-4. [Pola Login/Register](#4-pola-loginregister)
-5. [Sistem Warna dan Styling](#5-sistem-warna-dan-styling)
-6. [Adaptasi Peran (Role)](#6-adaptasi-peran-role)
-7. [Alur Pengguna (User Flow)](#7-alur-pengguna-user-flow)
-8. [Validasi Form](#8-validasi-form)
-9. [Best Practices](#9-best-practices)
-10. [Tips Pengembangan](#10-tips-pengembangan)
+2. [Arsitektur Fitur Autentikasi dengan FCDDA](#2-arsitektur-fitur-autentikasi-dengan-fcdda)
+3. [Struktur Folder dan Organisasi Kode](#3-struktur-folder-dan-organisasi-kode)
+4. [Domain Models dan Validasi](#4-domain-models-dan-validasi)
+5. [Repository dan Service Layer](#5-repository-dan-service-layer)
+6. [Custom Hooks dan State Management](#6-custom-hooks-dan-state-management)
+7. [Variants dan Role-Specific UI](#7-variants-dan-role-specific-ui)
+8. [Implementasi Sistem Warna dan Styling](#8-implementasi-sistem-warna-dan-styling)
+9. [Alur Autentikasi dan Validasi](#9-alur-autentikasi-dan-validasi)
+10. [Row Level Security dan Keamanan](#10-row-level-security-dan-keamanan)
+11. [Best Practices dan Patterns](#11-best-practices-dan-patterns)
+12. [Panduan Implementasi dan Replikasi](#12-panduan-implementasi-dan-replikasi)
 
 ## 1. Gambaran Umum
 
-Dokumen ini mencakup pola, struktur layout, dan styling dari fitur autentikasi (login dan register) pada platform MyArchery. Panduan ini berfungsi sebagai referensi untuk pengembangan dan pemeliharaan fitur autentikasi dengan pendekatan yang konsisten, sesuai dengan arsitektur Domain-Driven Modular dengan Role Adaptation Layer.
+Dokumen ini menjelaskan implementasi fitur autentikasi pada MyArchery Platform menggunakan pendekatan **Feature-Clustered Domain-Driven Architecture (FCDDA)** dengan **Simplified Variant Clustering**. Dokumen ini berfungsi sebagai panduan komprehensif untuk pengembangan dan replikasi fitur autentikasi yang konsisten di seluruh aplikasi.
 
 ### Tujuan Dokumentasi
-- Memberikan panduan yang jelas untuk implementasi fitur autentikasi
-- Memastikan konsistensi desain di seluruh aplikasi
-- Membuat dokumentasi referensi untuk onboarding developer baru
-- Mempermudah maintenance dan pengembangan fitur autentikasi
+- Memberikan panduan yang jelas untuk implementasi fitur autentikasi dengan FCDDA
+- Memastikan konsistensi desain dan logic di seluruh aplikasi
+- Menyediakan blueprint lengkap untuk replikasi fitur autentikasi
+- Mendukung developer dalam mengimplementasikan pendekatan role-based
+- Memfasilitasi maintainability dan extensibility jangka panjang
 
-## 2. Arsitektur Fitur Autentikasi
+## 2. Arsitektur Fitur Autentikasi dengan FCDDA
 
-Fitur autentikasi mengimplementasikan arsitektur Domain-Driven Modular dengan Role Adaptation Layer sesuai dengan pedoman arsitektur platform MyArchery.
+Fitur autentikasi mengimplementasikan arsitektur **Feature-Clustered Domain-Driven Architecture (FCDDA)** dengan **Simplified Variant Clustering**, yang merupakan evolusi dari pendekatan Domain-Driven Modular dengan Role Adaptation Layer.
 
-### Pendekatan Route Group `(roles)` vs `(auth)`
+### Perbandingan dengan Arsitektur Sebelumnya
 
-MyArchery Platform mengadopsi pendekatan route group `(roles)` daripada `(auth)` untuk struktur folder aplikasi dengan alasan sebagai berikut:
-
-1. **Pemisahan Concern yang Lebih Jelas**
-   - Pendekatan `(roles)` mengorganisir rute berdasarkan peran pengguna, bukan hanya fungsionalitas
-   - Setiap role memiliki area terpisah yang mencakup seluruh fitur untuk peran tersebut, termasuk halaman autentikasi
-
-2. **Keamanan dan Otorisasi yang Lebih Kuat**
-   - Struktur path yang berbasis role (`/admin/*`, `/organizer/*`, `/customer/*`) memudahkan implementasi middleware protection
-   - Mengurangi risiko akses silang antar role yang tidak diinginkan
-
-3. **Struktur URL yang Lebih Intuitif**
-   - URL seperti `/admin/login` dan `/organizer/login` lebih deskriptif dan menunjukkan tujuan dengan jelas
-   - Pattern URL konsisten di seluruh aplikasi (semua akses admin melalui `/admin/*`)
-
-4. **Konsistensi dengan Arsitektur Role Adaptation Layer**
-   - Mendukung prinsip role adaptation layer dengan memisahkan UI dan fungsionalitas berdasarkan peran
-   - Memungkinkan pengembangan UI yang sepenuhnya khusus untuk setiap peran
-
-5. **Skalabilitas**
-   - Lebih mudah menambahkan fitur baru untuk peran tertentu tanpa mempengaruhi rute lain
-   - Mendukung penambahan role baru di masa depan tanpa perubahan struktur besar
-
-Implementasi role-based routing ini merupakan pilihan yang lebih baik dibandingkan dengan pendekatan parameter-based (seperti `/login?role=admin`) karena memberikan pemisahan yang lebih bersih dalam codebase, URL yang lebih bermakna, dan perlindungan rute yang lebih kuat.
-
-### Hubungan antara `features/auth` dan Route Group `(roles)`
-
-Perlu dipahami bahwa dalam arsitektur MyArchery terdapat pembedaan penting antara:
-
-1. **Pengorganisasian Domain Bisnis** - Folder `features/auth`
-2. **Struktur Routing Aplikasi** - Folder `app/(roles)/...`
-
-Keduanya memiliki tujuan berbeda namun bekerja sama dalam arsitektur aplikasi:
-
-#### `features/auth`: Domain Bisnis Autentikasi
-
-Folder `features/auth` berada dalam struktur **domain bisnis** aplikasi mengikuti prinsip Domain-Driven Design:
-
-- `features/` berisi domain bisnis yang diorganisir berdasarkan fitur atau kemampuan aplikasi
-- `auth/` adalah domain fitur untuk semua operasi terkait autentikasi (login, register, reset password)
-
-Domain autentikasi mencakup **logika universal untuk semua peran** karena fungsi core seperti login, register, dan verifikasi adalah konsep yang berlaku untuk semua pengguna terlepas dari perannya.
-
-#### `app/(roles)/`: Struktur Routing untuk UI
-
-Folder `app/(roles)/` berada dalam struktur **routing Next.js** yang menentukan:
-
-- URL yang tersedia dalam aplikasi (misalnya `/admin/login`)
-- Halaman mana yang ditampilkan untuk URL tertentu 
-- Bagaimana rute dikelompokkan untuk middleware dan proteksi
-
-Pendekatan role-based routing digunakan di sini karena ini adalah **titik akses UI** yang spesifik untuk setiap peran.
-
-#### Alur Data dan Kolaborasi
-
-Struktur ini mengimplementasikan arsitektur **Client-Domain-Routing** di mana:
-
+#### Arsitektur Sebelumnya:
 ```
-┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
-│   app/(roles)/...   │      │  features/auth/     │      │  lib/supabase       │
-│   (Routing Layer)   │─────▶│  (Domain Layer)     │─────▶│  (Data Layer)       │
-└─────────────────────┘      └─────────────────────┘      └─────────────────────┘
-         ▲                            │
-         │                            │
-         │                            ▼
-┌─────────────────────┐      ┌─────────────────────┐
-│ components/auth/... │      │ features/auth/      │
-│ (UI Components)     │◀─────│ adapters/...        │
-└─────────────────────┘      │ (Adaptation Layer)  │
-                             └─────────────────────┘
+src/features/auth/
+├── core/                # Domain logic
+│   ├── models/
+│   ├── services/
+│   └── hooks/
+├── components/          # Shared UI components
+└── adapters/            # Role adaptation layer
+    ├── admin/
+    ├── organizer/
+    └── customer/
 ```
 
-Contoh alur ketika user mengakses `/admin/login`:
-
-1. User mengakses URL `/admin/login`
-2. Next.js merender `app/(roles)/admin/login/page.tsx`
-3. Page component memuat `AdminLoginAdapter`
-4. `AdminLoginAdapter` menggunakan komponen UI `LoginForm` dengan props khusus admin
-5. `LoginForm` menggunakan `useAuthService` hook dari domain auth
-6. `useAuthService` memanggil `AuthService.login()` dari domain autentikasi
-7. Setelah login berhasil, adapter melakukan verifikasi role dan redirect
-
-Ini menunjukkan bagaimana pendekatan route group `(roles)` dan domain bisnis `features/auth` saling melengkapi dan bukan bertentangan satu sama lain. Keduanya bekerja bersama dalam layer berbeda dari arsitektur aplikasi.
-
-### Struktur Folder
-
+#### Arsitektur FCDDA Baru:
 ```
-src/
-├── features/
-│   └── auth/                    # Domain fitur autentikasi
-│       ├── core/                # Logika bisnis autentikasi
-│       │   ├── models/          # Tipe dan interface
-│       │   │   ├── auth.ts      # Model autentikasi (LoginCredentials, RegisterData, dll)
-│       │   │   └── index.ts     # Export untuk models
-│       │   ├── services/        # Business logic
-│       │   │   ├── auth-service.ts  # Service autentikasi
-│       │   │   └── index.ts     # Export untuk services
-│       │   └── hooks/           # Custom hooks
-│       │       ├── useAuthService.ts # Hook untuk autentikasi
-│       │       └── index.ts     # Export untuk hooks
-│       ├── components/          # Komponen UI yang dapat digunakan ulang
-│       │   ├── LoginForm.tsx    # Form login yang reusable
-│       │   ├── RegisterForm.tsx # Form register yang reusable
-│       │   └── index.ts         # Export untuk komponen
-│       └── adapters/            # Role adaptation layer
-│           ├── LoginAdapter.tsx # Generic adapter untuk login
-│           ├── admin/           # Adaptasi untuk admin
-│           │   └── AdminLoginAdapter.tsx
-│           ├── organizer/       # Adaptasi untuk penyelenggara
-│           │   └── OrganizerLoginAdapter.tsx
-│           └── customer/        # Adaptasi untuk pelanggan
-│               └── CustomerLoginAdapter.tsx
-├── components/
-│   └── auth/                    # Komponen reusable untuk autentikasi
-│       ├── LoginForm.tsx        # Form login yang digunakan di UI
-│       └── RegisterForm.tsx     # Form register yang digunakan di UI
-├── app/
-│   └── (roles)/                 # Rute berbasis peran
-│       ├── admin/               # Rute khusus admin
-│       │   └── login/           # Halaman login admin
-│       │       └── page.tsx     # Root component halaman login admin
-│       ├── organizer/           # Rute khusus organizer
-│       │   └── login/           # Halaman login organizer
-│       │       └── page.tsx     # Root component halaman login organizer
-│       └── customer/            # Rute khusus customer
-│           └── login/           # Halaman login customer
-│               └── page.tsx     # Root component halaman login customer
-│   └── register/                # Halaman register umum
-│       └── page.tsx             # Root component halaman register
-└── lib/
-    └── supabase/                # Integrasi Supabase
-        └── client.ts            # Client untuk autentikasi
+src/features/auth/
+├── models/              # Domain models
+├── services/            # Business logic
+├── repository.ts        # Data access abstraction
+├── hooks/               # React hooks untuk auth
+├── utils/               # Auth-specific utils
+└── variants/            # Simplified variant clustering
+    ├── admin/           # Admin variant
+    │   ├── model.ts     # Admin-specific model extensions
+    │   ├── service.ts   # Admin-specific services
+    │   ├── hook.ts      # Admin-specific hooks
+    │   └── ui.tsx       # Admin UI implementation
+    ├── organizer/       # Organizer variant
+    │   └── [same structure]
+    └── customer/        # Customer variant
+        └── [same structure]
 ```
 
-### Komponen Utama
+### Keunggulan Arsitektur Baru:
 
-1. **Core Layer**
-   - `AuthService`: Menangani operasi autentikasi seperti login, register, dan logout
-   - `useAuthService`: Custom hook yang memungkinkan komponen React untuk mengakses fungsi autentikasi
+1. **Domain-Driven Centralization** - Domain model dan validasi berada di level feature
+2. **Simplified Variant Clustering** - Semua variant-specific code (model, service, hook, UI) berada dalam folder variants
+3. **Repository Pattern** - Data access abstraction terpusat di repository.ts
+4. **Clear Separation of Concerns** - Pemisahan yang jelas antara domain logic, data access, dan UI
+5. **Improved Testability** - Dependency inversion memudahkan testing dan mocking
+6. **Model-Driven Approach** - Domain model menjadi pusat arsitektur
 
-2. **Role Adaptation Layer**
-   - Adapters yang menyediakan UI dan logika autentikasi spesifik untuk setiap peran (admin, organizer, customer)
+## 3. Struktur Folder dan Organisasi Kode
 
-3. **Pages Layer**
-   - Halaman login dan register yang menerapkan Role Adapters yang sesuai berdasarkan parameter peran
+### 3.1 Struktur Folder Lengkap
 
-## 3. Struktur Komponen
+```
+src/features/auth/
+├── models/                # Domain models
+│   ├── user.ts            # User entity model
+│   ├── credentials.ts     # Login credentials model
+│   ├── validation.ts      # Domain validation rules
+│   └── index.ts           # Public exports
+│
+├── services/              # Business logic
+│   ├── auth-service.ts    # Core authentication service
+│   ├── token-service.ts   # Token management
+│   └── index.ts           # Public exports
+│
+├── repository.ts          # Data access abstraction
+│
+├── hooks/                 # React hooks
+│   ├── useAuthService.ts  # Core auth hook
+│   ├── useSession.ts      # Session management
+│   └── index.ts           # Public exports
+│
+├── utils/                 # Utility functions
+│   ├── token.ts           # Token parsing & validation
+│   ├── storage.ts         # Local storage helpers
+│   └── index.ts           # Public exports
+│
+└── variants/              # Role-specific implementations
+    ├── admin/             # Admin variant
+    │   ├── model.ts       # Admin-specific model extensions
+    │   ├── service.ts     # Admin auth services
+    │   ├── hook.ts        # Admin auth hooks
+    │   └── ui.tsx         # Admin login UI
+    │
+    ├── organizer/         # Organizer variant
+    │   └── [same structure]
+    │
+    └── customer/          # Customer variant
+        └── [same structure]
+```
 
-### Core Services
+### 3.2 Integration dengan App Router
+
+```
+src/app/(roles)/
+├── admin/
+│   └── login/
+│       └── page.tsx       # Imports from auth/variants/admin/ui.tsx
+│
+├── organizer/
+│   └── login/
+│       └── page.tsx       # Imports from auth/variants/organizer/ui.tsx
+│
+└── customer/
+    └── login/
+        └── page.tsx       # Imports from auth/variants/customer/ui.tsx
+```
+
+### 3.3 Shared UI Components Integration
+
+```
+src/shared/
+└── ui/
+    └── auth/              # Shared auth UI components
+        ├── AuthLayout.tsx # Common auth layout
+        ├── InputField.tsx # Reusable input component
+        └── LoginForm.tsx  # Base login form
+```
+
+## 4. Domain Models dan Validasi
+
+Domain model merupakan pusat arsitektur, mendefinisikan entitas dan aturan bisnis terkait autentikasi.
+
+### 4.1 User Model
+
 ```typescript
-// features/auth/core/services/auth-service.ts
-import { supabase } from '@/lib/supabase/client';
-import { LoginCredentials, RegisterData, AuthResponse } from '../models';
+// features/auth/models/user.ts
+export enum UserRole {
+  ADMIN = "admin",
+  ORGANIZER = "organizer",
+  CUSTOMER = "customer"
+}
 
-export const AuthService = {
-  async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
+export interface User {
+  id: string;
+  email: string;
+  displayName?: string;
+  role: UserRole;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Domain methods
+export function isAdmin(user: User): boolean {
+  return user.role === UserRole.ADMIN;
+}
+
+export function isOrganizer(user: User): boolean {
+  return user.role === UserRole.ORGANIZER;
+}
+
+export function isCustomer(user: User): boolean {
+  return user.role === UserRole.CUSTOMER;
+}
+```
+
+### 4.2 Login Credentials Model
+
+```typescript
+// features/auth/models/credentials.ts
+import { UserRole } from './user';
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  role?: UserRole;
+}
+
+export interface AuthResponse {
+  user: User | null;
+  session: Session | null;
+  error?: string;
+}
+
+export interface Session {
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: number;
+}
+```
+
+### 4.3 Validation Rules
+
+```typescript
+// features/auth/models/validation.ts
+import { LoginCredentials } from './credentials';
+import { UserRole } from './user';
+
+export function validateCredentials(credentials: LoginCredentials): string[] {
+  const errors: string[] = [];
+  
+  if (!credentials.email) {
+    errors.push('Email is required');
+  } else if (!/^\S+@\S+\.\S+$/.test(credentials.email)) {
+    errors.push('Email format is invalid');
+  }
+  
+  if (!credentials.password) {
+    errors.push('Password is required');
+  } else if (credentials.password.length < 8) {
+    errors.push('Password must be at least 8 characters');
+  }
+  
+  // Role validation is optional
+  if (credentials.role && !Object.values(UserRole).includes(credentials.role)) {
+    errors.push('Invalid role specified');
+  }
+  
+  return errors;
+}
+```
+
+## 5. Repository dan Service Layer
+
+Repository layer mengabstraksi interaksi dengan Supabase, dan Service layer mengimplementasikan logika bisnis.
+
+### 5.1 Repository Implementation
+
+```typescript
+// features/auth/repository.ts
+import { supabase } from '@/lib/supabase/client';
+import { LoginCredentials, AuthResponse } from './models/credentials';
+import { User, UserRole } from './models/user';
+
+export const AuthRepository = {
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: credentials.email,
+        password: credentials.password,
       });
 
       if (error) throw new Error(error.message);
-      return { user: data.user, session: data.session };
+      
+      return { 
+        user: data.user ? mapToUserModel(data.user) : null, 
+        session: data.session 
+      };
     } catch (error) {
-      throw new Error(`Login failed: ${error.message}`);
+      console.error("Login error:", error);
+      throw error;
     }
   },
-
-  async register(userData: RegisterData): Promise<AuthResponse> {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: { 
-          data: { 
-            role: userData.role,
-            full_name: userData.fullName
-          }
-        }
-      });
-
-      if (error) throw new Error(error.message);
-      return { user: data.user, session: data.session };
-    } catch (error) {
-      throw new Error(`Registration failed: ${error.message}`);
-    }
-  },
-
+  
   async logout(): Promise<void> {
     const { error } = await supabase.auth.signOut();
-    if (error) throw new Error(`Logout failed: ${error.message}`);
+    if (error) throw new Error(error.message);
   },
-
-  async resetPassword(email: string): Promise<void> {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) throw new Error(`Password reset failed: ${error.message}`);
+  
+  async getCurrentUser(): Promise<User | null> {
+    const { data } = await supabase.auth.getUser();
+    return data?.user ? mapToUserModel(data.user) : null;
+  },
+  
+  async getSession(): Promise<Session | null> {
+    const { data } = await supabase.auth.getSession();
+    return data?.session || null;
   }
 };
+
+// Helper to map Supabase user to our domain model
+function mapToUserModel(supabaseUser: any): User {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    displayName: supabaseUser.user_metadata?.display_name,
+    role: supabaseUser.user_metadata?.role || UserRole.CUSTOMER,
+    metadata: supabaseUser.user_metadata,
+    createdAt: supabaseUser.created_at,
+    updatedAt: supabaseUser.updated_at
+  };
+}
 ```
 
-### Custom Hooks
+### 5.2 Auth Service Implementation
+
 ```typescript
-// features/auth/core/hooks/useAuthService.ts
+// features/auth/services/auth-service.ts
+import { LoginCredentials, AuthResponse } from '../models/credentials';
+import { validateCredentials } from '../models/validation';
+import { AuthRepository } from '../repository';
+
+export class AuthService {
+  static async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    // Domain validation
+    const errors = validateCredentials(credentials);
+    if (errors.length > 0) {
+      throw new Error(`Validation failed: ${errors.join(', ')}`);
+    }
+    
+    const response = await AuthRepository.login(credentials);
+    
+    // Role verification if specified
+    if (credentials.role && response.user?.role !== credentials.role) {
+      throw new Error(`Unauthorized: User does not have ${credentials.role} role`);
+    }
+    
+    return response;
+  }
+  
+  static async logout(): Promise<void> {
+    return AuthRepository.logout();
+  }
+  
+  static async getCurrentUser() {
+    return AuthRepository.getCurrentUser();
+  }
+  
+  static async getSession() {
+    return AuthRepository.getSession();
+  }
+}
+```
+
+### 5.3 Token Service
+
+```typescript
+// features/auth/services/token-service.ts
+import { Session } from '../models/credentials';
+import { parseJwt, isTokenExpired } from '../utils/token';
+
+export class TokenService {
+  static getTokenInfo(token: string) {
+    return parseJwt(token);
+  }
+  
+  static isSessionValid(session: Session | null): boolean {
+    if (!session?.access_token) return false;
+    
+    // Check if token is expired
+    if (session.expires_at && session.expires_at < Date.now() / 1000) {
+      return false;
+    }
+    
+    return !isTokenExpired(session.access_token);
+  }
+  
+  static getRoleFromToken(token: string): string | null {
+    try {
+      const payload = parseJwt(token);
+      return payload?.user_metadata?.role || null;
+    } catch (e) {
+      return null;
+    }
+  }
+}
+```
+
+## 6. Custom Hooks dan State Management
+
+Custom hooks menyediakan abstraksi yang mudah digunakan untuk komponen React, dengan pengelolaan state yang konsisten.
+
+### 6.1 Core Auth Hook
+
+```typescript
+// features/auth/hooks/useAuthService.ts
 import { useState } from 'react';
+import { LoginCredentials, AuthResponse } from '../models/credentials';
+import { User } from '../models/user';
 import { AuthService } from '../services/auth-service';
-import { LoginCredentials, RegisterData, AuthResponse } from '../models';
 
 export function useAuthService() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  const login = async (credentials: LoginCredentials) => {
+  
+  const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
     setIsLoading(true);
     setError(null);
+    
     try {
       const response = await AuthService.login(credentials);
       return response;
     } catch (err) {
-      setError(err.message);
-      return null;
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      setError(errorMessage);
+      throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (userData: RegisterData) => {
+  const logout = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
-    try {
-      const response = await AuthService.register(userData);
-      return response;
-    } catch (err) {
-      setError(err.message);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    setIsLoading(true);
-    setError(null);
+    
     try {
       await AuthService.logout();
-      return true;
     } catch (err) {
-      setError(err.message);
-      return false;
+      const errorMessage = err instanceof Error ? err.message : 'Logout failed';
+      setError(errorMessage);
+      throw err;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getCurrentUser = async (): Promise<User | null> => {
+    try {
+      return await AuthService.getCurrentUser();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get user';
+      setError(errorMessage);
+      return null;
     }
   };
 
   return {
     login,
-    register,
     logout,
+    getCurrentUser,
+    isLoading,
+    error,
+  };
+}
+```
+
+### 6.2 Session Hook
+
+```typescript
+// features/auth/hooks/useSession.ts
+import { useState, useEffect } from 'react';
+import { Session } from '../models/credentials';
+import { User } from '../models/user';
+import { AuthService } from '../services/auth-service';
+import { TokenService } from '../services/token-service';
+
+export function useSession() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    const fetchSessionAndUser = async () => {
+      try {
+        const sessionData = await AuthService.getSession();
+        setSession(sessionData);
+        
+        if (sessionData && TokenService.isSessionValid(sessionData)) {
+          const userData = await AuthService.getCurrentUser();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error fetching session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSessionAndUser();
+    
+    // Optional: Set up a listener for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(session);
+          AuthService.getCurrentUser().then(setUser);
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+        }
+      }
+    );
+    
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+  
+  return {
+    session,
+    user,
+    loading,
+    isAuthenticated: !!session && !!user,
+  };
+}
+```
+
+## 7. Variants dan Role-Specific UI
+
+Implementasi UI spesifik untuk setiap role (admin, organizer, customer) menggunakan pendekatan Simplified Variant Clustering.
+
+### 7.1 Admin Variant Implementation
+
+```typescript
+// features/auth/variants/admin/model.ts
+import { LoginCredentials } from '../../models/credentials';
+import { UserRole } from '../../models/user';
+
+export interface AdminLoginCredentials extends LoginCredentials {
+  role: UserRole.ADMIN;
+}
+
+export const adminBenefits = [
+  "Akses ke manajemen pengguna dan role",
+  "Pantau dan kelola seluruh event pada platform",
+  "Konfigurasi sistem dan pengaturan platform",
+  "Akses laporan analitik lengkap"
+];
+```
+
+```typescript
+// features/auth/variants/admin/service.ts
+import { AuthService } from '../../services/auth-service';
+import { AdminLoginCredentials } from './model';
+import { AuthResponse } from '../../models/credentials';
+
+export class AdminAuthService {
+  static async login(credentials: Omit<AdminLoginCredentials, 'role'>): Promise<AuthResponse> {
+    // Always set role to ADMIN
+    const adminCredentials: AdminLoginCredentials = {
+      ...credentials,
+      role: 'admin'
+    };
+    
+    return AuthService.login(adminCredentials);
+  }
+}
+```
+
+```typescript
+// features/auth/variants/admin/hook.ts
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AdminAuthService } from './service';
+
+export function useAdminAuth() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      await AdminAuthService.login({ email, password });
+      router.push('/admin/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return {
+    login,
     isLoading,
     error
   };
 }
 ```
 
-### Reusable Login Component
 ```tsx
-// features/auth/components/LoginForm.tsx
+// features/auth/variants/admin/ui.tsx
 import { useState } from 'react';
-import { useAuthService } from '../core/hooks/useAuthService';
+import { useAdminAuth } from './hook';
+import { AuthLayout } from '@/shared/ui/auth/AuthLayout';
+import { InputField } from '@/shared/ui/auth/InputField';
+import { adminBenefits } from './model';
 
-interface LoginFormProps {
-  onSuccess?: (user: any) => void;
-  isAdminLogin?: boolean;
-  isOrganizerLogin?: boolean;
-  isCustomerLogin?: boolean;
-}
-
-export function LoginForm({ 
-  onSuccess, 
-  isAdminLogin = false,
-  isOrganizerLogin = false,
-  isCustomerLogin = false 
-}: LoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  const { login, isLoading, error } = useAuthService();
-
-  // Determine role-specific classes
-  const accentColor = isAdminLogin 
-    ? 'bg-purple-600 hover:bg-purple-700' 
-    : isOrganizerLogin 
-      ? 'bg-blue-600 hover:bg-blue-700' 
-      : 'bg-green-600 hover:bg-green-700';
-
-  // Determine role-specific form title
-  const formTitle = isAdminLogin 
-    ? 'Admin Login' 
-    : isOrganizerLogin 
-      ? 'Organizer Login' 
-      : 'Archer Login';
+export function AdminLoginUI() {
+  const { login, isLoading, error } = useAdminAuth();
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await login({ email, password });
-    if (result && onSuccess) {
-      onSuccess(result.user);
-    }
+    await login(email, password);
   };
 
   return (
-    <div className="w-full max-w-md p-8 md:p-12 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">{formTitle}</h2>
-      
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-500 rounded-md text-sm">
-          {error}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email Address
-          </label>
-          <input
+    <AuthLayout
+      title="Admin Control Panel"
+      subtitle="Akses ke manajemen platform MyArchery secara keseluruhan dengan tools dan fitur khusus admin."
+      benefits={adminBenefits}
+      accentColor="purple"
+    >
+      <div className="w-full max-w-md">
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <InputField
             id="email"
+            label="Email Address"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
             required
-            className="w-full px-4 py-2 h-12 bg-slate-100 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
           />
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-              Forgot Password?
-            </a>
-          </div>
-          <input
+          
+          <InputField
             id="password"
+            label="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
             required
-            className="w-full px-4 py-2 h-12 bg-slate-100 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
           />
-        </div>
-        
-        <div className="flex items-center">
-          <input
-            id="remember-me"
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-            Remember me
-          </label>
-        </div>
-        
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full h-12 flex justify-center items-center ${accentColor} text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${isLoading ? 'opacity-70' : ''}`}
-        >
-          {isLoading ? (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
-            'Sign In'
-          )}
-        </button>
-        
-        {isCustomerLogin && (
-          <div className="text-center text-sm">
-            Don't have an account? <a href="/register" className="text-blue-600 hover:underline">Sign up</a>
-          </div>
-        )}
-      </form>
-    </div>
-  );
-}
-```
-
-## 4. Pola Login/Register
-
-### Struktur Layout
-
-Fitur login dan register menggunakan struktur layout split-screen yang konsisten:
-
-```
-+---------------------------+---------------------------+
-|                           |                           |
-|                           |     Role-specific         |
-|      Login Form           |     branding dan          |
-|                           |     content               |
-|                           |                           |
-+---------------------------+---------------------------+
-```
-
-1. **Sisi Kiri**: 
-   - Form login atau register
-   - Latar belakang putih
-   - Styling konsisten dengan rounded corners dan shadow
-   - Komponen yang reusable
-
-2. **Sisi Kanan**:
-   - Warna background spesifik sesuai role (Admin: Purple, Organizer: Blue, Customer: Green)
-   - Konten marketing yang menjelaskan manfaat untuk role tersebut
-   - Logo dan elemen branding MyArchery
-
-### Responsivitas
-
-Layout mengubah urutan elemen pada tampilan mobile:
-
-1. **Desktop**:
-   - Grid dengan dua kolom sejajar
-   - Formulir di sebelah kiri, branding di sebelah kanan
-
-2. **Mobile**:
-   - Stack secara vertikal
-   - Branding di atas, formulir di bawah
-   - Implementasi dengan class: `order-2 md:order-1` dan `order-1 md:order-2`
-
-## 5. Sistem Warna dan Styling
-
-### Warna Spesifik Role
-
-Warna aksen disesuaikan berdasarkan peran pengguna:
-
-- **Admin**: 
-  - Primary: Purple (`#8B5CF6` / `bg-purple-600`)
-  - Gradient: `bg-gradient-to-br from-purple-900 to-purple-700`
-
-- **Organizer**: 
-  - Primary: Blue (`#3B82F6` / `bg-blue-600`)
-  - Gradient: `bg-gradient-to-br from-blue-800 to-blue-600`
-
-- **Customer**: 
-  - Primary: Green (`#10B981` / `bg-green-600`)
-  - Gradient: `bg-gradient-to-br from-green-800 to-green-600`
-
-### Konsistensi Styling Form
-
-Form menjaga konsistensi dengan pola berikut:
-
-- **Container**:
-  - Padding: `p-8 md:p-12`
-  - Background: `bg-white`
-  - Border Radius: `rounded-lg`
-  - Shadow: `shadow-lg`
-
-- **Heading**:
-  - Font Size: `text-2xl`
-  - Font Weight: `font-bold`
-  - Text Align: `text-center`
-  - Margin Bottom: `mb-6`
-
-- **Input Fields**:
-  - Height: `h-12`
-  - Padding: `px-4 py-2`
-  - Background: `bg-slate-100`
-  - Border: `border border-slate-200`
-  - Border Radius: `rounded-md`
-  - Focus State: `focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white`
-
-- **Labels**:
-  - Font Size: `text-sm`
-  - Font Weight: `font-medium`
-  - Color: `text-gray-700`
-
-- **Button**:
-  - Width: `w-full`
-  - Height: `h-12`
-  - Border Radius: `rounded-md`
-  - Font Weight: `font-medium`
-  - Transition: `transition-colors`
-  - Focus: `focus:outline-none focus:ring-2 focus:ring-offset-2`
-
-- **Error Messages**:
-  - Background: `bg-red-50`
-  - Text Color: `text-red-500`
-  - Padding: `p-3`
-  - Border Radius: `rounded-md`
-  - Font Size: `text-sm`
-
-## 6. Adaptasi Peran (Role)
-
-### Admin Login Adapter
-
-```tsx
-// features/auth/adapters/admin/AdminLoginAdapter.tsx
-import { useRouter } from 'next/navigation';
-import { LoginForm } from '../../components/LoginForm';
-
-export function AdminLoginAdapter() {
-  const router = useRouter();
-  
-  const handleLoginSuccess = (user: any) => {
-    // Verifikasi bahwa user memiliki role 'admin'
-    if (user.user_metadata?.role !== 'admin') {
-      // Handle unauthorized access
-      return;
-    }
-    
-    // Redirect ke dashboard admin
-    router.push('/admin/dashboard');
-  };
-  
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 min-h-screen">
-      <div className="flex items-center justify-center p-4 md:p-8 order-2 md:order-1">
-        <LoginForm
-          onSuccess={handleLoginSuccess}
-          isAdminLogin={true}
-        />
-      </div>
-      
-      <div className="flex flex-col justify-center p-8 bg-gradient-to-br from-purple-900 to-purple-700 text-white order-1 md:order-2">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-6">
-            Admin Portal
-          </h1>
           
-          <div className="space-y-4">
-            <div className="flex items-start space-x-4">
-              <div className="mt-1 bg-white bg-opacity-20 p-2 rounded-full">
-                {/* Icon */}
-              </div>
-              <div>
-                <h3 className="font-medium">Comprehensive Control</h3>
-                <p className="text-sm opacity-90">Manage all aspects of the MyArchery platform</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="mt-1 bg-white bg-opacity-20 p-2 rounded-full">
-                {/* Icon */}
-              </div>
-              <div>
-                <h3 className="font-medium">User Management</h3>
-                <p className="text-sm opacity-90">Administer user accounts and permissions</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="mt-1 bg-white bg-opacity-20 p-2 rounded-full">
-                {/* Icon */}
-              </div>
-              <div>
-                <h3 className="font-medium">Platform Insights</h3>
-                <p className="text-sm opacity-90">Access comprehensive analytics and reports</p>
-              </div>
-            </div>
-          </div>
-        </div>
+          <button
+            type="submit"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md font-medium disabled:bg-purple-300"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Log In"}
+          </button>
+        </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 ```
 
-### Organizer dan Customer Login Adapters
-
-Adapter untuk Organizer dan Customer mengikuti pola yang sama dengan perubahan pada:
-- Warna sesuai role
-- Konten marketing yang spesifik
-- Redirect destination yang berbeda
-- Verifikasi role yang sesuai
-
-## 7. Alur Pengguna (User Flow)
-
-### Login Flow
-
-1. User mengakses URL login sesuai peran:
-   - Admin: `/admin/login`
-   - Organizer: `/organizer/login` 
-   - Customer: `/customer/login`
-
-2. Server component melakukan pengecekan apakah user sudah login
-   - Jika sudah, redirect ke dashboard sesuai role
-   - Jika belum, tampilkan halaman login yang sesuai dengan role
-
-3. User memasukkan credentials (email dan password)
-
-4. Client mengirim request ke Supabase Auth API melalui AuthService
-
-5. Jika berhasil:
-   - User metadata (termasuk role) diperiksa
-   - Redirect ke dashboard sesuai role:
-     - Admin: `/admin/dashboard`
-     - Organizer: `/organizer/dashboard`
-     - Customer: `/customer/dashboard`
-
-6. Jika gagal:
-   - Tampilkan pesan error
-   - User dapat mencoba kembali
-
-### Register Flow
-
-1. User mengakses URL register sesuai peran:
-   - Customer: `/register` atau `/register/customer`
-   - Organizer: `/register/organizer`
-
-2. Server component melakukan pengecekan apakah user sudah login
-   - Jika sudah, redirect ke dashboard sesuai role
-   - Jika belum, tampilkan form register yang sesuai
-
-3. User mengisi data registrasi (nama, email, password, role)
-
-4. Form melakukan validasi client-side
-
-5. Data dikirim ke Supabase Auth API
-
-6. Jika berhasil:
-   - User diarahkan ke halaman verifikasi email atau langsung ke dashboard
-   - Role disimpan dalam user_metadata
-
-7. Jika gagal:
-   - Tampilkan pesan error
-   - User dapat mencoba kembali
-
-### Middleware dan Route Protection
-
-Semua rute spesifik role dilindungi oleh middleware yang memeriksa:
-
-1. Apakah user sudah login (melalui verifikasi session Supabase)
-
-2. Apakah role user sesuai dengan segment path utama URL:
-   - Rute `/admin/*` hanya bisa diakses role "admin"
-   - Rute `/organizer/*` hanya bisa diakses role "organizer"
-   - Rute `/customer/*` hanya bisa diakses role "customer"
-
-3. Implementasi dalam `middleware.ts`:
-   ```typescript
-   // Contoh implementasi middleware protection
-   export async function middleware(request: NextRequest) {
-     const { pathname } = request.nextUrl;
-     
-     // Periksa apakah ini adalah route yang protected
-     const isAdminRoute = pathname.startsWith('/admin');
-     const isOrganizerRoute = pathname.startsWith('/organizer');
-     const isCustomerRoute = pathname.startsWith('/customer');
-     
-     // Jika bukan protected route, lanjutkan
-     if (!isAdminRoute && !isOrganizerRoute && !isCustomerRoute) {
-       return NextResponse.next();
-     }
-     
-     // Get session dan periksa apakah user logged in
-     const supabase = createMiddlewareClient({ cookies });
-     const { data: { session } } = await supabase.auth.getSession();
-     
-     if (!session) {
-       // Redirect ke login page yang sesuai
-       if (isAdminRoute) return NextResponse.redirect(new URL('/admin/login', request.url));
-       if (isOrganizerRoute) return NextResponse.redirect(new URL('/organizer/login', request.url));
-       if (isCustomerRoute) return NextResponse.redirect(new URL('/customer/login', request.url));
-     }
-     
-     // Periksa apakah role user sesuai dengan route
-     const userRole = session.user.user_metadata?.role;
-     
-     if (isAdminRoute && userRole !== 'admin') {
-       return NextResponse.redirect(new URL('/unauthorized', request.url));
-     }
-     
-     if (isOrganizerRoute && userRole !== 'organizer') {
-       return NextResponse.redirect(new URL('/unauthorized', request.url));
-     }
-     
-     if (isCustomerRoute && userRole !== 'customer') {
-       return NextResponse.redirect(new URL('/unauthorized', request.url));
-     }
-     
-     // User memiliki role yang sesuai, lanjutkan
-     return NextResponse.next();
-   }
-   ```
-
-4. Implementasi ini memastikan:
-   - Pengguna yang belum login akan diarahkan ke halaman login yang sesuai
-   - Pengguna yang sudah login hanya dapat mengakses area yang sesuai dengan role mereka
-   - Pengguna yang mencoba mengakses area yang tidak sesuai dengan role akan diarahkan ke halaman unauthorized
-
-## 8. Validasi Form
-
-### Validasi Login Form
-
-- **Email**: Tidak boleh kosong, format email valid
-- **Password**: Tidak boleh kosong
-
-### Validasi Register Form
-
-- **Full Name**: Minimal 3 karakter
-- **Email**: Format email valid
-- **Password**: Minimal 8 karakter
-- **Confirm Password**: Harus sama dengan password
-- **Terms Agreement**: Harus dicentang
-
-### Implementasi Validasi Client-Side 
+### 7.2 Organizer Variant Implementation
 
 ```typescript
-// Contoh validasi register form
-const validate = () => {
-  const errors: Record<string, string> = {};
-  
-  if (fullName.trim().length < 3) {
-    errors.fullName = 'Full name must be at least 3 characters';
+// features/auth/variants/organizer/model.ts
+import { LoginCredentials } from '../../models/credentials';
+import { UserRole } from '../../models/user';
+
+export interface OrganizerLoginCredentials extends LoginCredentials {
+  role: UserRole.ORGANIZER;
+}
+
+export const organizerBenefits = [
+  "Kelola event panahan dengan tools lengkap",
+  "Pantau pendaftaran dan pembayaran peserta",
+  "Akses sistem scoring dan manajemen hasil",
+  "Analisis performa event dan statistik peserta"
+];
+```
+
+```typescript
+// features/auth/variants/organizer/service.ts
+import { AuthService } from '../../services/auth-service';
+import { OrganizerLoginCredentials } from './model';
+import { AuthResponse } from '../../models/credentials';
+
+export class OrganizerAuthService {
+  static async login(credentials: Omit<OrganizerLoginCredentials, 'role'>): Promise<AuthResponse> {
+    // Always set role to ORGANIZER
+    const organizerCredentials: OrganizerLoginCredentials = {
+      ...credentials,
+      role: 'organizer'
+    };
+    
+    return AuthService.login(organizerCredentials);
   }
+}
+```
+
+```typescript
+// features/auth/variants/organizer/hook.ts
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { OrganizerAuthService } from './service';
+
+export function useOrganizerAuth() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = 'Please enter a valid email address';
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      await OrganizerAuthService.login({ email, password });
+      router.push('/organizer/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return {
+    login,
+    isLoading,
+    error
+  };
+}
+```
+
+```tsx
+// features/auth/variants/organizer/ui.tsx
+import { useState } from 'react';
+import { useOrganizerAuth } from './hook';
+import { AuthLayout } from '@/shared/ui/auth/AuthLayout';
+import { InputField } from '@/shared/ui/auth/InputField';
+import { organizerBenefits } from './model';
+
+export function OrganizerLoginUI() {
+  const { login, isLoading, error } = useOrganizerAuth();
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await login(email, password);
+  };
+
+  return (
+    <AuthLayout
+      title="Organizer Dashboard"
+      subtitle="Platform lengkap untuk pengelolaan event panahan dari perencanaan hingga pelaksanaan."
+      benefits={organizerBenefits}
+      accentColor="blue"
+    >
+      <div className="w-full max-w-md">
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <InputField
+            id="email"
+            label="Email Address"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+          />
+          
+          <InputField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+          />
+          
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium disabled:bg-blue-300"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Log In"}
+          </button>
+        </form>
+      </div>
+    </AuthLayout>
+  );
+}
+```
+
+### 7.3 Customer Variant Implementation
+
+```typescript
+// features/auth/variants/customer/model.ts
+import { LoginCredentials } from '../../models/credentials';
+import { UserRole } from '../../models/user';
+
+export interface CustomerLoginCredentials extends LoginCredentials {
+  role: UserRole.CUSTOMER;
+}
+
+export const customerBenefits = [
+  "Daftar event panahan dengan mudah",
+  "Akses informasi event terbaru",
+  "Pantau skor dan ranking Anda",
+  "Kelola profil dan data atlet Anda"
+];
+```
+
+```typescript
+// features/auth/variants/customer/service.ts
+import { AuthService } from '../../services/auth-service';
+import { CustomerLoginCredentials } from './model';
+import { AuthResponse } from '../../models/credentials';
+
+export class CustomerAuthService {
+  static async login(credentials: Omit<CustomerLoginCredentials, 'role'>): Promise<AuthResponse> {
+    // Always set role to CUSTOMER
+    const customerCredentials: CustomerLoginCredentials = {
+      ...credentials,
+      role: 'customer'
+    };
+    
+    return AuthService.login(customerCredentials);
   }
+}
+```
+
+```typescript
+// features/auth/variants/customer/hook.ts
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { CustomerAuthService } from './service';
+
+export function useCustomerAuth() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   
-  if (password.length < 8) {
-    errors.password = 'Password must be at least 8 characters';
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      await CustomerAuthService.login({ email, password });
+      router.push('/customer/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return {
+    login,
+    isLoading,
+    error
+  };
+}
+```
+
+```tsx
+// features/auth/variants/customer/ui.tsx
+import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { useCustomerAuth } from './hook';
+import { AuthLayout } from '@/shared/ui/auth/AuthLayout';
+import { InputField } from '@/shared/ui/auth/InputField';
+import { customerBenefits } from './model';
+
+export function CustomerLoginUI() {
+  const { login, isLoading, error } = useCustomerAuth();
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await login(email, password);
+  };
+
+  return (
+    <AuthLayout
+      title="Akun Pengguna MyArchery"
+      subtitle="Akses ke platform event panahan dengan fitur lengkap untuk peserta dan penggemar panahan."
+      benefits={customerBenefits}
+      accentColor="green"
+    >
+      <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link href="/" className="text-slate-600 hover:text-slate-800 flex items-center text-sm font-medium">
+            <ArrowLeft size={16} className="mr-1" />
+            Kembali ke halaman utama
+          </Link>
+        </div>
+        
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <InputField
+            id="email"
+            label="Email Address"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+          />
+          
+          <InputField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+          />
+          
+          <button
+            type="submit"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md font-medium disabled:bg-green-300"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Log In"}
+          </button>
+          
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Belum punya akun?{" "}
+              <Link href="/customer/register" className="text-green-600 hover:text-green-500 font-medium">
+                Register
+              </Link>
+            </p>
+          </div>
+        </form>
+      </div>
+    </AuthLayout>
+  );
+}
+```
+
+## 8. Implementasi Sistem Warna dan Styling
+
+Komponen UI yang memiliki stok bersama dipindahkan ke shared UI components.
+
+### 8.1 Shared Auth Layout
+
+```tsx
+// shared/ui/auth/AuthLayout.tsx
+import React from 'react';
+
+interface AuthLayoutProps {
+  children: React.ReactNode;
+  title: string;
+  subtitle: string;
+  benefits: string[];
+  accentColor?: "green" | "blue" | "purple";
+}
+
+export function AuthLayout({ 
+  children, 
+  title, 
+  subtitle, 
+  benefits, 
+  accentColor = "purple" 
+}: Readonly<AuthLayoutProps>) {
+  // Color mapping for different roles
+  const colorMap = {
+    green: {
+      gradient: "bg-gradient-to-br from-green-500 to-green-600",
+      highlight: "text-yellow-300",
+      checkBg: "bg-green-400",
+      text: "text-green-50",
+      textHighlight: "text-green-100"
+    },
+    blue: {
+      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+      highlight: "text-blue-300",
+      checkBg: "bg-blue-500", // Slightly different from admin/customer
+      text: "text-blue-50",
+      textHighlight: "text-blue-100"
+    },
+    purple: {
+      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+      highlight: "text-purple-300",
+      checkBg: "bg-purple-400",
+      text: "text-purple-50",
+      textHighlight: "text-purple-100"
+    }
+  };
+  
+  const colors = colorMap[accentColor];
+  
+  return (
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-grow grid md:grid-cols-2 items-stretch w-full">
+        {/* Left column with login form */}
+        <div className="flex items-center justify-center bg-white p-8 md:p-12 order-2 md:order-1">
+          {children}
+        </div>
+        
+        {/* Right column with colored background */}
+        <div className={`${colors.gradient} text-white p-8 md:p-12 flex items-center justify-center order-1 md:order-2`}>
+          <div className="max-w-xl">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              {title.split(" ").map((word, i, arr) => 
+                i === arr.length - 1 ? 
+                  <span key={`title-word-${word}-${i}`} className={colors.highlight}>{word} </span> : 
+                  <span key={`title-word-${word}-${i}`}>{word} </span>
+              )}
+            </h1>
+            <p className={`text-lg ${colors.textHighlight} mb-8`}>
+              {subtitle}
+            </p>
+            <div className="space-y-4">
+              {benefits.map((benefit) => (
+                <div key={`benefit-${benefit}`} className="flex items-center">
+                  <div className={`${colors.checkBg} p-2 rounded-full mr-3`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className={colors.text}>{benefit}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+```
+
+### 8.2 Shared Input Field
+
+```tsx
+// shared/ui/auth/InputField.tsx
+interface InputFieldProps {
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'password';
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  error?: string;
+  required?: boolean;
+  className?: string;
+}
+
+export function InputField({
+  id,
+  label,
+  type,
+  value,
+  onChange,
+  placeholder,
+  error,
+  required,
+  className
+}: InputFieldProps) {
+  return (
+    <div className={`space-y-2 ${className || ''}`}>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+          error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+        }`}
+        placeholder={placeholder}
+        required={required}
+      />
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+```
+
+### 8.3 Styling System Overview
+
+Sistem warna pada fitur auth diimplementasikan dengan pendekatan konsisten:
+
+1. **Role-Specific Colors**:
+   - **Admin**: Ungu (`purple`) - `bg-gradient-to-br from-purple-500 to-purple-600`
+   - **Organizer**: Biru (`blue`) - `bg-gradient-to-br from-blue-500 to-blue-600`
+   - **Customer**: Hijau (`green`) - `bg-gradient-to-br from-green-500 to-green-600`
+
+2. **Typography**:
+   - **Headings**: `text-4xl md:text-5xl font-bold` dengan kata terakhir di-highlight
+   - **Subtitles**: `text-lg` dengan warna sesuai role
+   - **Body**: Default styling dengan kontras tinggi terhadap background
+
+3. **Spacing**:
+   - **Container**: `p-8 md:p-12` - responsive padding
+   - **Vertical rhythm**: `mb-4` (heading → subtitle), `mb-8` (subtitle → content), `space-y-4` (list)
+
+4. **Icons**:
+   - Container: `p-2 rounded-full` dengan background color dinamis
+   - Icon: `h-5 w-5 text-white`
+
+5. **Responsiveness**:
+   - **Mobile**: Single column dengan branding di atas, form di bawah
+   - **Desktop**: Two columns dengan form kiri, branding kanan
+   - **Spacing & Typography**: Adaptive berdasarkan viewport
+
+## 9. Alur Autentikasi dan Validasi
+
+### 9.1 Alur Login
+
+1. **User mengakses URL login role-specific**
+   - `/admin/login`
+   - `/organizer/login`
+   - `/customer/login`
+
+2. **Next.js App Router merender UI component sesuai role**
+   - `app/(roles)/admin/login/page.tsx` → `AdminLoginUI`
+   - `app/(roles)/organizer/login/page.tsx` → `OrganizerLoginUI`
+   - `app/(roles)/customer/login/page.tsx` → `CustomerLoginUI`
+
+3. **User mengisi form dan submit**
+   - Email dan password input dikirim ke role-specific hook
+   - Hook memanggil service dengan role yang sudah ditentukan
+   - Service melakukan validasi domain dan memanggil repository
+   - Repository berkomunikasi dengan Supabase
+
+4. **Role verification**
+   - Service memverifikasi bahwa user memiliki role yang sesuai
+   - RLS di database membatasi akses berdasarkan role
+
+5. **Error handling atau redirect**
+   - Jika sukses, user diredirect ke dashboard sesuai role
+   - Jika gagal, pesan error ditampilkan
+
+### 9.2 Validasi Input
+
+1. **Client-Side Validation**
+   - Required fields (HTML5 validation)
+   - Email format (type="email")
+   - State management untuk error display
+
+2. **Domain-Level Validation**
+   - Model validation rules seperti format email dan password length
+   - Spesifik validasi per role jika diperlukan
+
+3. **Service-Level Validation**
+   - Validasi role-specific (role matching)
+   - Business rules validation
+
+4. **Database-Level Validation**
+   - RLS policies berdasarkan role
+   - Database constraints
+
+## 10. Row Level Security dan Keamanan
+
+### 10.1 Supabase RLS Policies
+
+```sql
+-- supabase/policies/auth.sql
+
+-- Users Table Policies
+
+-- Admin can view all users
+CREATE POLICY "Admin can view all users" ON auth.users
+  FOR SELECT
+  TO authenticated
+  USING (auth.jwt() ->> 'role' = 'admin');
+
+-- Users can view themselves
+CREATE POLICY "Users can view themselves" ON auth.users
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = id);
+
+-- Admin can update any user
+CREATE POLICY "Admin can update any user" ON auth.users
+  FOR UPDATE
+  TO authenticated
+  USING (auth.jwt() ->> 'role' = 'admin');
+
+-- Users can update themselves
+CREATE POLICY "Users can update themselves" ON auth.users
+  FOR UPDATE 
+  TO authenticated
+  USING (auth.uid() = id);
+```
+
+### 10.2 Edge Functions for Auth
+
+```typescript
+// supabase/functions/verify-role/index.ts
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+serve(async (req) => {
+  const { email, requestedRole } = await req.json();
+  
+  // Create a Supabase client with the service role key
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  );
+  
+  try {
+    // Get user by email
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('email', email)
+      .single();
+    
+    if (error) throw error;
+    
+    // Verify role
+    const hasRole = users.role === requestedRole;
+    
+    return new Response(
+      JSON.stringify({ hasRole }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    );
   }
+});
+```
+
+### 10.3 Token Security Utils
+
+```typescript
+// features/auth/utils/token.ts
+export function parseJwt(token: string): any {
+  if (!token) return null;
   
-  if (password !== confirmPassword) {
-    errors.confirmPassword = 'Passwords do not match';
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error parsing JWT:', e);
+    return null;
   }
+}
+
+export function isTokenExpired(token: string): boolean {
+  const payload = parseJwt(token);
+  if (!payload || !payload.exp) return true;
   
-  if (!agreeToTerms) {
-    errors.agreeToTerms = 'You must agree to the terms and conditions';
+  const expiryDate = new Date(payload.exp * 1000); // Convert seconds to milliseconds
+  return expiryDate <= new Date();
+}
+```
+
+### 10.4 Storage Security
+
+```typescript
+// features/auth/utils/storage.ts
+export const StorageKeys = {
+  AUTH_TOKEN: 'myarchery_auth_token',
+  USER_ROLE: 'myarchery_user_role'
+};
+
+export const SecureStorage = {
+  setItem(key: string, value: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(key, value);
+  },
+  
+  getItem(key: string): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(key);
+  },
+  
+  removeItem(key: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(key);
+  },
+  
+  clear(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(StorageKeys.AUTH_TOKEN);
+    localStorage.removeItem(StorageKeys.USER_ROLE);
   }
-  
-  setValidationErrors(errors);
-  return Object.keys(errors).length === 0;
 };
 ```
 
-## 9. Best Practices
+## 11. Best Practices dan Patterns
 
-### Shared Components
+### 11.1 Factory Pattern untuk Auth Service
 
-- Gunakan komponen reusable untuk form login dan register
-- Implementasikan props untuk kustomisasi spesifik role
-- Periksa role user sebelum redirect
+```typescript
+// features/auth/services/index.ts
+import { AuthService } from './auth-service';
+import { AdminAuthService } from '../variants/admin/service';
+import { OrganizerAuthService } from '../variants/organizer/service';
+import { CustomerAuthService } from '../variants/customer/service';
+import { UserRole } from '../models/user';
 
-### Role-Specific Styling
+export function getAuthServiceForRole(role: UserRole) {
+  switch(role) {
+    case UserRole.ADMIN:
+      return AdminAuthService;
+    case UserRole.ORGANIZER:
+      return OrganizerAuthService;
+    case UserRole.CUSTOMER:
+      return CustomerAuthService;
+    default:
+      return AuthService;
+  }
+}
+```
 
-- Gunakan variabel warna untuk setiap role
-- Terapkan warna secara konsisten di seluruh aplikasi
-- Gunakan Tailwind classes untuk konsistensi
+### 11.2 Composition Pattern untuk UI Components
 
-### Security
+```tsx
+// Contoh composition pattern di login UI
+function LoginUI({ 
+  title,
+  subtitle,
+  benefits,
+  accentColor,
+  onSubmit,
+  isLoading,
+  error
+}) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(email, password);
+  };
+  
+  // Composable form component
+  const LoginForm = (
+    <div className="w-full max-w-md">
+      {error && <ErrorBanner message={error} />}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <InputField
+          id="email"
+          label="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <InputField
+          id="password"
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <SubmitButton isLoading={isLoading} color={accentColor} />
+      </form>
+    </div>
+  );
+  
+  return (
+    <AuthLayout
+      title={title}
+      subtitle={subtitle}
+      benefits={benefits}
+      accentColor={accentColor}
+    >
+      {LoginForm}
+    </AuthLayout>
+  );
+}
+```
 
-- Lakukan validasi client-side sebelum mengirim request
-- Verifikasi role di server-side setelah login
-- Implementasikan middleware untuk proteksi rute
-- Jangan simpan data sensitif di local storage
+### 11.3 Role-Specific Button Component
 
-### Error Handling
+```tsx
+// shared/ui/auth/RoleButton.tsx
+interface RoleButtonProps {
+  role: 'admin' | 'organizer' | 'customer';
+  children: React.ReactNode;
+  isLoading?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  onClick?: () => void;
+  disabled?: boolean;
+}
 
-- Tampilkan pesan error yang jelas dan membantu
-- Jangan tampilkan error teknis ke pengguna
-- Log error untuk debugging
+export function RoleButton({
+  role,
+  children,
+  isLoading = false,
+  type = 'button',
+  onClick,
+  disabled = false
+}: RoleButtonProps) {
+  // Role-specific styling
+  const roleStyles = {
+    admin: "bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300",
+    organizer: "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300",
+    customer: "bg-green-600 hover:bg-green-700 disabled:bg-green-300"
+  };
+  
+  // Base styles
+  const baseStyles = "w-full text-white py-2 px-4 rounded-md font-medium";
+  
+  return (
+    <button
+      type={type}
+      className={`${baseStyles} ${roleStyles[role]}`}
+      onClick={onClick}
+      disabled={isLoading || disabled}
+    >
+      {isLoading ? "Processing..." : children}
+    </button>
+  );
+}
+```
 
-### Performance
+## 12. Panduan Implementasi dan Replikasi
 
-- Gunakan form libraries ringan seperti react-hook-form
-- Lakukan lazy loading untuk komponen yang tidak langsung dibutuhkan
-- Implementasikan optimistic UI untuk pengalaman yang lebih responsif
+Untuk mengimplementasi atau mereplikasi fitur autentikasi dengan arsitektur FCDDA, ikuti langkah-langkah berikut:
 
-## 10. Tips Pengembangan
+### 12.1 Setup Folder Structure
 
-### Kustomisasi dan Ekstensi
+1. Buat struktur folder dasar:
+```
+features/auth/
+├── models/
+├── services/
+├── repository.ts
+├── hooks/
+├── utils/
+└── variants/
+    ├── admin/
+    ├── organizer/
+    └── customer/
+```
 
-1. **Menambahkan Social Login**
-   - Tambahkan metode social login di AuthService
-   - Tambahkan tombol social login di component LoginForm
-   - Gunakan warna yang konsisten dengan branding platform social
+2. Buat shared UI components:
+```
+shared/ui/auth/
+├── AuthLayout.tsx
+├── InputField.tsx
+└── RoleButton.tsx
+```
 
-2. **Menambahkan Role Baru**
-   - Duplikasi dan modifikasi adapter yang ada
-   - Sesuaikan warna dan konten untuk role baru
-   - Update middleware untuk proteksi rute
+### 12.2 Implementasi Models
 
-3. **Mengubah Styling**
-   - Ubah variabel warna di theme
-   - Update classes Tailwind di komponen
-   - Pastikan perubahan konsisten di seluruh aplikasi
+1. Definisikan domain models (user.ts, credentials.ts)
+2. Implementasi validasi domain (validation.ts)
+3. Buat role-specific model extensions di folder variants
 
-### Debugging
+### 12.3 Implementasi Repository
 
-1. **Masalah Autentikasi**
-   - Periksa session di Supabase dashboard
-   - Verifikasi route protection di middleware
-   - Periksa error di browser console
+1. Buat repository.ts dengan abstraksi untuk data access
+2. Implementasi metode untuk login, logout, getCurrentUser, dan getSession
+3. Integrasi dengan Supabase atau provider auth lainnya
 
-2. **Masalah UI**
-   - Gunakan React DevTools untuk memeriksa props dan state
-   - Verifikasi responsivitas dengan DevTools Mobile View
-   - Periksa konsistensi style dengan design system
+### 12.4 Implementasi Services
 
-### Testing
+1. Buat core auth-service.ts dengan logika autentikasi umum
+2. Buat token-service.ts untuk verifikasi token dan session
+3. Implementasi factory pattern untuk role-based service access
 
-1. **Unit Testing**
-   - Test AuthService dengan mock untuk Supabase
-   - Test validasi form
+### 12.5 Implementasi Hooks
 
-2. **Integration Testing**
-   - Test alur autentikasi end-to-end
-   - Test form submission dan handling response
-   - Test redirect setelah login berhasil
+1. Buat core hooks useAuthService dan useSession
+2. Implementasi role-specific hooks di folder variants
 
-3. **Accessibility Testing**
-   - Verifikasi bahwa form dapat diakses dengan keyboard
-   - Pastikan color contrast sesuai standar WCAG
-   - Test dengan screen reader
+### 12.6 Implementasi UI
+
+1. Buat shared components (AuthLayout, InputField, RoleButton) 
+2. Implementasi role-specific UI di folder variants
+3. Integrasikan UI dengan Next.js App Router
+
+### 12.7 Setup Security
+
+1. Definisi RLS policies di Supabase
+2. Implementasi Edge Functions jika diperlukan
+3. Setup token security dan storage utilities
+
+### 12.8 Integrasi dengan Project
+
+1. Konfigurasi Supabase client
+2. Setup middleware untuk auth protection
+3. Implementasi route handlers untuk setiap role
+4. Integrate dengan global state management jika diperlukan
+
+Dengan mengikuti panduan ini, fitur autentikasi dapat diimplementasi dengan arsitektur yang konsisten dan dapat di-maintain untuk jangka panjang.
