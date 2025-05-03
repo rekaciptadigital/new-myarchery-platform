@@ -2,19 +2,19 @@
 
 > **Dokumen Version Control**  
 > **Dibuat**: 10 Januari 2024  
-> **Diperbarui Terakhir**: 26 April 2025  
+> **Diperbarui Terakhir**: 3 Mei 2025  
 > **Penulis**: Laksmana Tri Moerdani  
 > **Kontributor**: Engineering Team
 
-## Domain-Driven Modular Architecture dengan Role Adaptation Layer dan Supabase Integration
+## Feature-Clustered Domain-Driven Architecture (FCDDA) dengan Role Adaptation Layer dan Supabase Integration
 
 ### Daftar Isi
 
 1. [Pendahuluan](#1-pendahuluan)
 2. [Prinsip Arsitektur](#2-prinsip-arsitektur)
 3. [Struktur Folder](#3-struktur-folder)
-4. [Core Layer](#4-core-layer)
-5. [Feature Layer](#5-feature-layer)
+4. [Feature Clustering](#4-feature-clustering)
+5. [Domain Models & Services](#5-domain-models--services)
 6. [Role Adaptation Layer](#6-role-adaptation-layer)
 7. [Supabase Integration](#7-supabase-integration)
 8. [State Management](#8-state-management)
@@ -23,30 +23,38 @@
 11. [Testing dan Quality Assurance](#11-testing-dan-quality-assurance)
 12. [Best Practices](#12-best-practices)
 13. [Konsistensi Layout dalam Role Adaptation](#13-konsistensi-layout-dalam-role-adaptation)
-14. [Model-Driven Architecture](#14-model-driven-architecture)
+14. [Feature Variant Management](#14-feature-variant-management)
+15. [UI Component Organization](#15-ui-component-organization)
 
 ## 1. Pendahuluan
 
-Platform MyArchery menerapkan arsitektur **Domain-Driven Modular dengan Role Adaptation Layer dan Supabase Integration**. Arsitektur ini dikembangkan untuk memenuhi kebutuhan spesifik aplikasi super app yang melayani berbagai jenis pengguna dengan domain bisnis yang kompleks.
+Platform MyArchery menerapkan arsitektur **Feature-Clustered Domain-Driven Architecture (FCDDA) dengan Role Adaptation Layer dan Supabase Integration**. Arsitektur ini dikembangkan untuk memenuhi kebutuhan spesifik aplikasi super app yang melayani berbagai jenis pengguna dengan domain bisnis yang kompleks.
 
 ### Tujuan Arsitektur
 
 - **Skalabilitas Enterprise-Level** - Mendukung pertumbuhan aplikasi dan fitur baru
 - **Maintainability Jangka Panjang** - Memudahkan pemeliharaan kode seiring berkembangnya platform
-- **Separation of Concerns** - Memisahkan business logic dari presentation layer
+- **Domain Co-location** - Mengelompokkan kode berdasarkan domain bisnis dan fitur
 - **Role-Specific User Experience** - Mengoptimalkan UX untuk setiap tipe pengguna
 - **Konsistensi Codebase** - Menyediakan pola yang konsisten untuk seluruh aplikasi
 - **Developer Experience** - Memudahkan onboarding dan kolaborasi tim developer
 
 ### Komponen Utama Arsitektur
 
-1. **Domain-Driven Design (DDD)** - Pengorganisasian kode berdasarkan domain bisnis
-2. **Hexagonal Architecture / Ports and Adapters** - Role adapters sebagai port ke UI yang berbeda
-3. **Clean Architecture** - Separation of concerns yang jelas
-4. **Backend-as-a-Service Integration** - Supabase sebagai backend yang terintegrat
-5. **Role-Based Multi-Tenant** - Pemisahan akses di multiple layers
+1. **Feature-Clustered Organization** - Pengelompokan seluruh aspek fitur dalam satu lokasi
+2. **Domain-Driven Design (DDD)** - Pengorganisasian kode berdasarkan domain bisnis
+3. **Hexagonal Architecture / Ports and Adapters** - Role adapters sebagai port ke UI yang berbeda
+4. **Feature Variant Management** - Pengelolaan varian dalam satu fitur dengan struktur yang konsisten
+5. **Backend-as-a-Service Integration** - Supabase sebagai backend yang terintegrat
+6. **Role-Based Multi-Tenant** - Pemisahan akses di multiple layers
 
 ## 2. Prinsip Arsitektur
+
+### Feature-Clustered Organization
+
+- **Co-location Principle** - Semua kode yang berubah bersama disimpan bersama
+- **Feature Isolation** - Setiap fitur memiliki seluruh kode yang diperlukan dalam satu lokasi
+- **Minimal Shared Dependencies** - Meminimalisir dependensi antar fitur
 
 ### Domain-Driven Design (DDD)
 
@@ -75,7 +83,7 @@ Platform MyArchery menerapkan arsitektur **Domain-Driven Modular dengan Role Ada
 │   ├── seed/               # Data awal
 │   ├── functions/          # Edge Functions & Database Functions
 │   ├── triggers/           # Database triggers
-│   └── policies/           # RLS policies untuk tiap peran (admin/organizer/customer)
+│   └── policies/           # RLS policies untuk tiap peran
 │
 ├── src/
 │   ├── app/                # Next.js App Router
@@ -89,214 +97,247 @@ Platform MyArchery menerapkan arsitektur **Domain-Driven Modular dengan Role Ada
 │   │
 │   ├── features/           # Domain-driven features
 │   │   ├── event-management/
-│   │   │   ├── core/       # Logika inti fitur
-│   │   │   │   ├── services/
-│   │   │   │   ├── models/
-│   │   │   │   └── utils/
-│   │   │   ├── components/ # Komponen bersama
-│   │   │   └── adapters/   # Adaptasi peran
-│   │   │       ├── admin/
-│   │   │       ├── organizer/
-│   │   │       └── customer/
+│   │   │   ├── models/     # Domain models
+│   │   │   │   ├── common.ts
+│   │   │   │   ├── tournament.ts
+│   │   │   │   ├── league.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── services/   # Business logic
+│   │   │   │   ├── common.ts
+│   │   │   │   ├── tournament.ts
+│   │   │   │   └── league.ts
+│   │   │   │
+│   │   │   ├── repository.ts # Data access
+│   │   │   │
+│   │   │   ├── hooks/      # Custom hooks
+│   │   │   │
+│   │   │   ├── utils/      # Utility functions
+│   │   │   │
+│   │   │   └── ui/         # UI components
+│   │   │       ├── shared/
+│   │   │       ├── tournament/
+│   │   │       │   ├── admin/
+│   │   │       │   ├── organizer/
+│   │   │       │   └── customer/
+│   │   │       └── league/
+│   │   │           ├── admin/
+│   │   │           ├── organizer/ 
+│   │   │           └── customer/
 │   │   │
 │   │   └── scoring/
 │   │       └── [struktur serupa]
 │   │
-│   ├── components/         # Komponen UI bersama
-│   │   ├── ui/
-│   │   ├── layouts/
-│   │   └── role-specific/  # Ekstensi khusus peran
-│   │       ├── admin/
-│   │       ├── organizer/
-│   │       └── customer/
+│   ├── shared/             # Shared resources
+│   │   ├── ui/             # Reusable UI components
+│   │   ├── layouts/        # Layout templates
+│   │   │   ├── admin/ 
+│   │   │   ├── organizer/
+│   │   │   └── customer/
+│   │   ├── hooks/          # Shared hooks
+│   │   └── utils/          # Shared utilities
 │   │
-│   ├── lib/                # Utilitas bersama
-│   │   ├── supabase/       # Konfigurasi & utilitas Supabase
-│   │   │   ├── client.ts   # Client Supabase terinisialisasi
-│   │   │   ├── server.ts   # Server component client
-│   │   │   ├── admin.ts    # Client dengan hak akses admin
-│   │   │   └── types/      # Type yang digenerate dari database
-│   │   ├── auth/           # Logika autentikasi & otorisasi
-│   │   ├── api-client/     # Client untuk API eksternal
-│   │   ├── hooks/          # Custom hooks
-│   │   └── utils/          # Utilitas umum
+│   ├── core/               # Core functionality
+│   │   ├── supabase/       # Supabase client & utils
+│   │   └── auth/           # Authentication logic
 │   │
-│   └── contexts/           # Manajemen state global
-│       ├── auth-context/   # Konteks autentikasi
-│       └── role-context/   # Manajemen state berbasis peran
+│   └── contexts/           # Global state management
+│       ├── auth-context/   # Authentication context
+│       └── sidebar-context/# Sidebar state management
 │
 └── middleware.ts           # Middleware Next.js untuk routing & auth
 ```
 
-## 4. Core Layer
+## 4. Feature Clustering
 
-Core Layer berisi logika bisnis yang independen dari UI dan kebutuhan spesifik user role.
+Feature Clustering adalah konsep utama dalam arsitektur FCDDA yang mengelompokkan semua resource terkait fitur dalam satu lokasi.
 
-### Struktur Core Layer
+### Struktur Feature Cluster
 
 ```
-/features/[feature-name]/core/
-  ├── models/               # Definisi tipe & interface
-  ├── services/             # Business logic & use cases
-  │   ├── [service-name].ts # Service untuk area fungsi tertentu 
-  │   └── index.ts          # Ekspor publik dari services
-  └── utils/                # Fungsi utilitas khusus domain
+/features/event-management/
+  ├── models/               # Domain models
+  ├── services/             # Business logic 
+  ├── repository.ts         # Data access
+  ├── hooks/                # Custom hooks
+  ├── utils/                # Utility functions
+  └── ui/                   # UI components
+      ├── shared/           # Shared within feature
+      ├── tournament/       # UI for tournament variant
+      │   ├── admin/        # Admin UI for tournaments
+      │   ├── organizer/    # Organizer UI for tournaments
+      │   └── customer/     # Customer UI for tournaments
+      └── league/           # UI for league variant
 ```
 
-### Prinsip Core Layer
+### Prinsip Feature Clustering
 
-1. **Pure Business Logic** - Tidak mengandung UI components atau logika presentasi
-2. **Framework Agnostic** - Minimal ketergantungan pada framework (Next.js, React)
-3. **Single Responsibility** - Tiap service memiliki area tanggung jawab yang jelas
-4. **Input/Output Typing** - Menggunakan TypeScript interfaces untuk I/O yang jelas
-5. **Domain Models** - Menggunakan tipe yang merepresentasikan bisnis domain
+1. **Complete Feature Encapsulation** - Semua yang terkait fitur berada dalam satu folder
+2. **Minimized Shared Dependencies** - Hanya komponen yang benar-benar digunakan di multiple fitur yang masuk `/shared`
+3. **Clear Domain Boundaries** - Setiap cluster merepresentasikan satu domain bisnis
+4. **Update Locality** - Perubahan pada satu fitur terbatas pada cluster tersebut
 
-### Contoh Implementasi Service
+### Jenis Resource dalam Feature Cluster
+
+1. **Domain Models** - Definisi dari entitas bisnis dan validasi domain
+2. **Services** - Business logic terkait fitur
+3. **Repository** - Interface untuk data access
+4. **Hooks** - Custom React hooks untuk fitur
+5. **Utils** - Fungsi utilitas khusus domain
+6. **UI Components** - Komponen presentasi berdasarkan varian dan role
+
+## 5. Domain Models & Services
+
+Domain Models menjadi pusat dari setiap feature cluster, merepresentasikan entities bisnis dan business rules.
+
+### Struktur Domain Models
+
+```
+/features/event-management/models/
+  ├── common.ts             # Shared types across variants
+  ├── tournament.ts         # Tournament specific models
+  ├── league.ts             # League specific models
+  ├── series.ts             # Series specific models
+  └── index.ts              # Public exports
+```
+
+### Implementasi Model
 
 ```typescript
-// features/event-management/core/services/event-service.ts
-import { Event, EventDetail, CreateEventParams } from '../models/event';
-import { supabase } from '@/lib/supabase/client';
+// features/event-management/models/common.ts
+export interface EventBase {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: 'draft' | 'published' | 'completed' | 'cancelled';
+  organizerId: string;
+}
 
-export const EventService = {
-  async getEvents(): Promise<Event[]> {
-    // Implementasi untuk mendapatkan daftar event
-  },
+// features/event-management/models/tournament.ts
+import { EventBase } from './common';
+
+export interface TournamentEvent extends EventBase {
+  type: 'tournament';
+  eliminationType: 'single' | 'double' | 'round-robin';
+  numberOfParticipants: number;
+  registrationDeadline: string;
+}
+
+// Domain methods
+export function validateTournament(tournament: TournamentEvent): string[] {
+  const errors: string[] = [];
   
-  async getEventById(id: string): Promise<EventDetail> {
-    // Implementasi untuk mendapatkan detail event
-  },
-  
-  async createEvent(params: CreateEventParams): Promise<Event> {
-    // Implementasi untuk membuat event baru
+  if (!tournament.name) {
+    errors.push('Tournament name is required');
   }
-};
-```
-
-## 5. Feature Layer
-
-Feature Layer mengorganisir kode berdasarkan domain bisnis dan fitur utama aplikasi.
-
-### Struktur Feature Layer
-
-```
-/features/
-  ├── event-management/    # Domain/fitur untuk event management
-  ├── scoring/             # Domain/fitur untuk scoring
-  ├── registration/        # Domain/fitur untuk registration
-  └── payment/             # Domain/fitur untuk payment
-```
-
-### Prinsip Feature Layer
-
-1. **Domain Separation** - Fitur dipisahkan berdasarkan domain bisnis
-2. **Bounded Context** - Setiap fitur memiliki boundary yang jelas
-3. **Shared Components** - Komponen UI yang dapat dibagikan di seluruh role
-4. **Core Logic Encapsulation** - Business logic terkapsulasi di folder core
-
-### Relasi Antar Feature
-
-- Features dapat menggunakan Core Libraries (`/lib/*`)
-- Features dapat mengakses komponen UI umum (`/components/*`)
-- Features TIDAK boleh mengakses langsung feature lain, harus melalui ekspor publik
-
-### Isolasi dan Komunikasi Antar Feature
-
-1. **Strict Module Boundaries** - Feature harus diisolasi sepenuhnya dari feature lain
-   - Tidak boleh melakukan import langsung dari feature lain
-   - Tidak boleh mengakses state internal feature lain
-   - Tidak boleh memanggil fungsi/service dari feature lain tanpa melalui API publik
-
-2. **Public API Pattern** - Setiap feature harus mendefinisikan API publik yang jelas
-   ```typescript
-   // features/event-management/index.ts (Public API)
-   export { EventService } from './core/services';
-   export type { Event, EventDetail } from './core/models';
-   export { EventAdminAdapter } from './adapters/admin';
-   export { EventOrganizerAdapter } from './adapters/organizer';
-   // Hanya ekspor yang diperlukan oleh feature lain
-   ```
-
-3. **Komunikasi Antar Feature** - Pattern yang direkomendasikan:
-   - **Facade Pattern** - Feature besar dapat menyediakan facade untuk feature lain
-   - **Event-based Communication** - Gunakan event emitter/subscriber untuk komunikasi loose-coupling
-   - **Shared Core Services** - Berbagi data melalui service di `/lib`
-
-4. **Shared State Management** - Jika beberapa feature perlu berbagi state:
-   - Pindahkan state ke level yang lebih tinggi (global context)
-   - Atau gunakan service pattern dengan state yang terkelola di `/lib`
-
-5. **Dependency Injection** - Gunakan DI untuk mengurangi coupling langsung:
-   ```typescript
-   // Contoh Dependency Injection
-   function FeatureComponent({ eventService = defaultEventService }) {
-     // Component menggunakan eventService yang di-inject
-   }
-   ```
-
-6. **Monitoring Dependensi** - Gunakan tools untuk memantau dependensi:
-   - ESLint rules untuk mencegah import dari feature lain
-   - Dependency graph generator untuk visualisasi hubungan antar module
-
-## 6. Role Adaptation Layer
-
-Role Adaptation Layer adalah kunci dari arsitektur ini. Layer ini mengadaptasi fitur core untuk kebutuhan UI spesifik tiap role.
-
-### Struktur Role Adaptation Layer
-
-```
-/features/[feature-name]/adapters/
-  ├── admin/               # Adaptasi untuk admin
-  │   ├── components/      # Komponen UI spesifik admin
-  │   └── hooks/           # Hooks spesifik admin
-  ├── organizer/           # Adaptasi untuk organizer
-  └── customer/            # Adaptasi untuk customer
-```
-
-### Prinsip Role Adaptation Layer
-
-1. **Single Source of Truth** - Menggunakan core logic yang sama untuk semua role
-2. **Role-Specific UI** - UI yang dioptimalkan untuk kebutuhan tiap role
-3. **Permission Handling** - Menerapkan logic akses dan permission di adapter
-4. **Consistent Interface Contract** - Interface yang konsisten antara core dan adapters
-
-### Contoh Implementasi Adapter
-
-```typescript
-// features/event-management/adapters/admin/EventAdminAdapter.tsx
-import { EventCore } from "../../core/models"
-import { AdminEventActions } from "./AdminEventActions"
-
-export function EventAdminAdapter({ eventData }: { eventData: EventCore }) {
-  // Admin-specific logic and permissions
-  const canApprove = checkAdminPermission('approve_events')
   
-  return (
-    <div className="admin-event-wrapper">
-      <h2>{eventData.name}</h2>
-      <EventDetails data={eventData} />
-      {canApprove && <AdminEventActions eventId={eventData.id} />}
-    </div>
-  )
+  if (new Date(tournament.startDate) > new Date(tournament.endDate)) {
+    errors.push('Start date cannot be after end date');
+  }
+  
+  return errors;
 }
 ```
 
-```typescript
-// features/event-management/adapters/organizer/EventOrganizerAdapter.tsx
-import { EventCore } from "../../core/models"
-import { OrganizerEventControls } from "./OrganizerEventControls"
+### Service Layer
 
-export function EventOrganizerAdapter({ eventData }: { eventData: EventCore }) {
-  // Organizer-specific logic
-  const isOwner = checkEventOwnership(eventData.id)
+Services menangani business logic untuk domain model:
+
+```typescript
+// features/event-management/services/tournament.ts
+import { TournamentEvent } from '../models/tournament';
+import * as repository from '../repository';
+
+export class TournamentService {
+  static async getTournaments(): Promise<TournamentEvent[]> {
+    return repository.getTournaments();
+  }
   
-  return (
-    <div className="organizer-event-wrapper">
-      <h2>{eventData.name}</h2>
-      <EventDetails data={eventData} />
-      {isOwner && <OrganizerEventControls eventId={eventData.id} />}
-    </div>
-  )
+  static async getTournamentById(id: string): Promise<TournamentEvent | null> {
+    return repository.getTournamentById(id);
+  }
+  
+  static async createTournament(data: Omit<TournamentEvent, 'id'>): Promise<string> {
+    // Domain validation
+    const tournament = data as TournamentEvent;
+    const errors = validateTournament(tournament);
+    
+    if (errors.length > 0) {
+      throw new Error(`Tournament validation failed: ${errors.join(', ')}`);
+    }
+    
+    return repository.createTournament(data);
+  }
+  
+  // More methods...
+}
+```
+
+### Factory Pattern for Service Variants
+
+Service Factory Pattern untuk menangani varian fitur:
+
+```typescript
+// features/event-management/services/common.ts
+import { EventBase } from '../models/common';
+import { TournamentService } from './tournament';
+import { LeagueService } from './league';
+
+export interface EventService<T extends EventBase> {
+  getAll(): Promise<T[]>;
+  getById(id: string): Promise<T | null>;
+  create(data: Omit<T, 'id'>): Promise<string>;
+  update(id: string, data: Partial<T>): Promise<void>;
+  delete(id: string): Promise<void>;
+}
+
+export function getEventService(eventType: 'tournament' | 'league' | 'series'): EventService<any> {
+  switch(eventType) {
+    case 'tournament':
+      return TournamentService;
+    case 'league':
+      return LeagueService;
+    // Other cases
+    default:
+      throw new Error(`Unsupported event type: ${eventType}`);
+  }
+}
+```
+
+## 6. Role Adaptation Layer
+
+Role Adaptation Layer mengadaptasi domain models dan services untuk UI spesifik berdasarkan role pengguna (admin, organizer, customer).
+
+### Struktur Role Adaptation Layer
+
+Alih-alih menaruh adapter di `ui/`, kini UI adapter berada di tiap varian dalam folder `variants/`:
+
+```text
+/features/event-management/variants/
+  ├── tournament/       # Variant 'tournament'
+  │   └── ui.tsx        # UI adapter (internal switch berdasarkan role)
+  ├── league/           # Variant 'league'
+  │   └── ui.tsx        # UI adapter
+  └── series/           # Variant 'series'
+      └── ui.tsx        # UI adapter
+```
+
+Setiap file `ui.tsx` dapat meng-handle logic role-specific:
+
+```tsx
+// features/event-management/variants/tournament/ui.tsx
+import { TournamentService } from '../tournament/service';
+
+export default function TournamentUI({ role, variantProps }) {
+  if (role === 'admin') {
+    return <AdminTournamentView {...variantProps} />;
+  }
+  if (role === 'organizer') {
+    return <OrganizerTournamentView {...variantProps} />;
+  }
+  return <CustomerTournamentView {...variantProps} />;
 }
 ```
 
@@ -1137,7 +1178,7 @@ Memastikan konsistensi layout antar fitur dengan role yang sama adalah aspek kri
 
 Dengan mematuhi prinsip-prinsip ini, aplikasi akan memiliki pengalaman pengguna yang konsisten di seluruh fitur untuk setiap role, sekaligus mempertahankan arsitektur yang bersih dan mudah di-maintain.
 
-## 14. Model-Driven Architecture
+## 14. Feature Variant Management
 
 Panduan ini memperjelas pendekatan model-driven yang digunakan dalam arsitektur MyArchery Platform, dengan fokus pada perbedaan antara model domain dan subfeature.
 
@@ -1375,3 +1416,91 @@ Pendekatan model-driven menawarkan keunggulan:
 5. **Onboarding** - Developer baru lebih mudah memahami domain bisnis
 
 Dengan mengikuti pendekatan ini, struktur aplikasi akan lebih mencerminkan domain bisnis yang sesungguhnya dan mengurangi kompleksitas serta redundansi dalam implementasi.
+
+## 15. UI Component Organization
+
+Panduan ini menjelaskan pengorganisasian komponen UI dalam arsitektur MyArchery Platform, dengan fokus pada pemisahan komponen berdasarkan peran dan varian fitur.
+
+### 15.1 Struktur Komponen UI
+
+Komponen UI diorganisir berdasarkan peran pengguna dan varian fitur:
+
+```
+/features/event-management/ui/
+  ├── shared/               # Shared components within feature
+  ├── tournament/           # Tournament-specific UI
+  │   ├── admin/            # Admin-specific UI for tournaments
+  │   ├── organizer/        # Organizer-specific UI for tournaments
+  │   └── customer/         # Customer-specific UI for tournaments
+  └── league/               # League-specific UI
+      ├── admin/
+      ├── organizer/
+      └── customer/
+```
+
+### 15.2 Implementasi Komponen UI
+
+Komponen UI diimplementasikan dengan mempertimbangkan peran pengguna dan varian fitur:
+
+```tsx
+// features/event-management/ui/tournament/admin/TournamentCard.tsx
+import { TournamentEvent } from '../../../models/tournament';
+
+interface TournamentCardProps {
+  tournament: TournamentEvent;
+}
+
+export function TournamentCard({ tournament }: TournamentCardProps) {
+  return (
+    <div className="tournament-card">
+      <h2>{tournament.name}</h2>
+      <p>{tournament.description}</p>
+      <p>{tournament.startDate} - {tournament.endDate}</p>
+      <p>Participants: {tournament.numberOfParticipants}</p>
+      {/* Admin-specific actions */}
+    </div>
+  );
+}
+```
+
+### 15.3 Reusable Components
+
+Komponen yang dapat digunakan kembali di seluruh fitur ditempatkan di folder `shared`:
+
+```tsx
+// features/event-management/ui/shared/Button.tsx
+interface ButtonProps {
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+export function Button({ onClick, children }: ButtonProps) {
+  return (
+    <button onClick={onClick} className="btn">
+      {children}
+    </button>
+  );
+}
+```
+
+### 15.4 Konsistensi Desain
+
+1. **Design System** - Gunakan design system yang konsisten untuk semua komponen
+2. **CSS Modules** - Gunakan CSS Modules untuk menghindari konflik gaya
+3. **Responsiveness** - Pastikan semua komponen responsif di berbagai perangkat
+4. **Accessibility** - Terapkan standar aksesibilitas (a11y) pada semua komponen
+
+### 15.5 Testing Komponen UI
+
+1. **Unit Testing** - Uji setiap komponen secara terpisah
+2. **Integration Testing** - Uji integrasi komponen dalam konteks fitur
+3. **Visual Regression Testing** - Gunakan alat seperti Storybook dan Chromatic untuk menguji regresi visual
+
+### 15.6 Best Practices
+
+1. **Single Responsibility** - Setiap komponen harus memiliki satu tanggung jawab yang jelas
+2. **Composition over Inheritance** - Gunakan komposisi untuk membangun komponen yang kompleks
+3. **Prop Drilling** - Hindari prop drilling dengan menggunakan context atau hooks
+4. **Documentation** - Dokumentasikan setiap komponen dengan contoh penggunaan
+
+Dengan mengikuti panduan ini, komponen UI akan terorganisir dengan baik, mudah digunakan kembali, dan konsisten di seluruh aplikasi.

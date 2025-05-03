@@ -287,25 +287,27 @@ interface Organizer {
 
 ## 4. Implementasi Model
 
-Berikut adalah implementasi model domain menggunakan TypeScript dengan pendekatan model-driven:
-
 ### Struktur Folder
 
+```text
+/features/<domain-feature>/
+  ├── models/              # Domain models & validation
+  │   ├── common.ts        # Shared types across variants
+  │   ├── <variant1>.ts    # Model varian domain (tournament, league, etc.)
+  │   ├── <variant2>.ts    # Model varian domain lainnya
+  │   └── index.ts         # Public exports
+  ├── services/            # Business logic untuk model
+  ├── repository.ts        # Data access layer
+  ├── hooks/               # Custom hooks untuk fitur
+  ├── utils/               # Utility functions khusus model
+  └── ui/                  # UI adapters untuk role spesifik
+      ├── shared/
+      └── <variant>/
+          ├── admin/
+          ├── organizer/
+          └── customer/
 ```
-/features/event-management/
-  /core/
-    /models/
-      event.ts
-      tournament.ts
-      category.ts
-      participant.ts
-      target.ts
-      venue.ts
-      organizer.ts
-      types/          # Shared types
-        common.ts
-        enums.ts
-```
+> **Catatan:** Letakkan semua file model di dalam `features/<feature>/models/` sesuai prinsip FCDDA.
 
 ### Implementasi Model
 
