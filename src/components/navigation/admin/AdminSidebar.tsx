@@ -3,7 +3,7 @@
 import { BarChart, Calendar, Home, Settings, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import { LogoutButton } from "@/features/auth/variants/shared/LogoutButton";
 import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [

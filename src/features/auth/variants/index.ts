@@ -9,6 +9,9 @@ export * from './admin';
 export * from './organizer';
 export * from './customer';
 
+// Export shared components
+export * from './shared';
+
 // Factory function to get the right auth hook based on role
 export function getAuthHook(role?: UserRole) {
   const importHook = async () => {

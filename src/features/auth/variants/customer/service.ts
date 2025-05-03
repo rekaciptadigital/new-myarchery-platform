@@ -16,6 +16,13 @@ interface EventSummary {
   [key: string]: unknown; // Allow for additional properties with unknown type
 }
 
+// Customer registration data
+interface CustomerRegistrationData {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export class CustomerAuthService extends AuthService {
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     // Force the role to be customer for this service
@@ -26,6 +33,24 @@ export class CustomerAuthService extends AuthService {
     
     // Call the parent login method with customer role enforcement
     return super.login(customerCredentials);
+  }
+  
+  // Customer registration method
+  static async register(data: CustomerRegistrationData): Promise<void> {
+    try {
+      // In a real implementation, this would call the repository to register the user
+      // For now, this is a placeholder implementation
+      console.log('Registering customer:', data.email);
+      
+      // Simulate backend delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real implementation, we would return the result from the repository
+      return;
+    } catch (error) {
+      console.error('Customer registration error:', error);
+      throw new Error('Registration failed. Please try again.');
+    }
   }
   
   // Customer-specific methods

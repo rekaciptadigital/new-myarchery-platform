@@ -5,10 +5,12 @@
 import { useState } from 'react';
 import { LoginCredentials } from '../../models/credentials';
 import { OrganizerAuthService } from './service';
+import { useRouter } from 'next/navigation';
 
 export function useOrganizerAuth() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   
   const organizerLogin = async (email: string, password: string) => {
     setIsLoading(true);
@@ -21,7 +23,9 @@ export function useOrganizerAuth() {
         // Role is enforced in the OrganizerAuthService
       };
       
-      return await OrganizerAuthService.login(credentials);
+      await OrganizerAuthService.login(credentials);
+      // Redirect to organizer dashboard after successful login
+      router.push('/organizer/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Organizer authentication failed';
       setError(errorMessage);

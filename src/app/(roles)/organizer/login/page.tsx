@@ -1,4 +1,4 @@
-import { OrganizerLoginAdapter } from "@/features/auth/adapters/organizer/OrganizerLoginAdapter";
+import { OrganizerLoginUI } from "@/features/auth/variants/organizer/ui";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -15,7 +15,7 @@ export default function OrganizerLoginPage() {
                 Kembali ke halaman utama
               </Link>
             </div>
-            <OrganizerLoginAdapter />
+            <OrganizerLoginUI />
           </div>
         </div>
         

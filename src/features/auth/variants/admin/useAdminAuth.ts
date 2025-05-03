@@ -5,10 +5,12 @@
 import { useState } from 'react';
 import { LoginCredentials } from '../../models/credentials';
 import { AdminAuthService } from './service';
+import { useRouter } from 'next/navigation';
 
 export function useAdminAuth() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   
   const adminLogin = async (email: string, password: string) => {
     setIsLoading(true);
@@ -21,7 +23,9 @@ export function useAdminAuth() {
         // Role is enforced in the AdminAuthService
       };
       
-      return await AdminAuthService.login(credentials);
+      await AdminAuthService.login(credentials);
+      // Redirect to admin dashboard after successful login
+      router.push('/admin/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Admin authentication failed';
       setError(errorMessage);

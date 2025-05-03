@@ -11,7 +11,7 @@ import {
   SidebarLogo, 
   MobileMenuButton 
 } from "@/components/ui/sidebar/SidebarComponents";
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import { LogoutButton } from "@/features/auth/variants/shared/LogoutButton";
 import { useAuth } from "@/contexts/auth-context";
 
 // Define organizer-specific navigation items with correct routing paths

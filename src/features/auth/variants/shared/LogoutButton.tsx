@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, ButtonProps } from '@/components/ui/button';
-import { useAuth } from '@/contexts/auth-context';
 import { LogOut } from 'lucide-react';
+import { useAuthService } from '../../hooks/useAuthService';
 
 interface LogoutButtonProps extends Omit<ButtonProps, 'onClick'> {
   redirectTo?: string;
@@ -19,8 +19,8 @@ export function LogoutButton({
   confirmLogout = false,
   ...props
 }: Readonly<LogoutButtonProps>) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { logout } = useAuthService();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -29,13 +29,13 @@ export function LogoutButton({
     }
 
     try {
-      setIsLoading(true);
+      setIsLoggingOut(true);
       await logout();
       router.push(redirectTo);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoggingOut(false);
     }
   };
 
@@ -43,13 +43,13 @@ export function LogoutButton({
     <Button
       variant="ghost"
       onClick={handleLogout}
-      disabled={isLoading}
+      disabled={isLoggingOut}
       {...props}
     >
       {showIcon && (
         <LogOut className="mr-2 h-4 w-4" />
       )}
-      {isLoading ? 'Logging out...' : children}
+      {isLoggingOut ? 'Logging out...' : children}
     </Button>
   );
 }

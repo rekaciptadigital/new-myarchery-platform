@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/auth/LoginForm";
+import { AdminLoginUI } from "@/features/auth/variants/admin/ui";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
                 Kembali ke halaman utama
               </Link>
             </div>
-            <LoginForm isAdminLogin={true} />
+            <AdminLoginUI />
           </div>
         </div>
         
