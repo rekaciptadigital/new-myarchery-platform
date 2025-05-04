@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import { Metadata } from "next"; // Add this import
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import './tournament-form.css' // Use relative path instead of alias
 import { AuthProvider } from "@/contexts/auth-context";
 
 const geistSans = Geist({

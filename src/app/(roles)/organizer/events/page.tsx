@@ -1,5 +1,10 @@
-import { OrganizerEventsManagementAdapter } from "@/features/event-management/adapters/organizer/components/OrganizerEventsManagementAdapter";
+import { EventManagementAdapter } from "@/features/event-management/adapters/organizer/EventManagementAdapter";
 
-export default function OrganizerEventsPage() {
-  return <OrganizerEventsManagementAdapter />;
+export const metadata = {
+  title: 'Event Management - MyArchery',
+  description: 'Manage your archery events and tournaments',
+};
+
+export default function EventsPage() {
+  return <EventManagementAdapter />;
 }
