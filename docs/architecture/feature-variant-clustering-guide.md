@@ -3,7 +3,8 @@
 > **Dokumen Version Control**  
 > **Dibuat**: 3 Mei 2025  
 > **Penulis**: Laksmana Tri Moerdani  
-> **Status**: Draft
+> **Status**: Draft  
+> **Update**: 4 Mei 2025 - Menambahkan pendekatan Simplified Variant Clustering
 
 ## 1. Pendahuluan
 
@@ -21,7 +22,9 @@ Feature Variant Clustering adalah pola organisasi dalam arsitektur FCDDA yang me
 3. **Common Resources**: Model, service, hook, util yang berlaku untuk semua varian.
 4. **Variant-Specific Resources**: Model, service, hook, util, UI adapter yang khusus untuk satu varian.
 
-## 3. Struktur Folder Standar
+## 3. Pendekatan Implementasi
+
+### 3.1 Struktur Folder Standar (Standard Variant Clustering)
 
 ```text
 /features/<feature-name>/
@@ -46,6 +49,38 @@ Feature Variant Clustering adalah pola organisasi dalam arsitektur FCDDA yang me
           └── customer/
 ```
 
+### 3.2 Struktur Folder Sederhana (Simplified Variant Clustering)
+
+Pendekatan alternatif yang memudahkan navigasi dan memfokuskan semua file terkait varian dalam satu lokasi:
+
+```text
+features/<feature-name>/
+├── models/               # common models
+├── services/             # common services
+├── repository.ts         # data access
+├── hooks/                # common hooks
+├── utils/                # common utils
+└── variants/             # semua varian dalam satu tempat
+    ├── tournament/       # varian tournament
+    │   ├── model.ts
+    │   ├── service.ts
+    │   ├── hook.ts
+    │   └── ui/
+    │       ├── admin/
+    │       ├── organizer/
+    │       └── customer/
+    └── league/           # varian league
+        ├── model.ts
+        ├── service.ts
+        ├── hook.ts
+        └── ui/
+            ├── admin/
+            ├── organizer/
+            └── customer/
+```
+
+Pilihan struktur bergantung pada preferensi tim dan kompleksitas masing-masing varian. Simplified Variant Clustering lebih cocok untuk varian-varian yang memiliki perbedaan signifikan dengan banyak kustomisasi.
+
 ## 4. Langkah Implementasi
 
 1. **Identifikasi Variants**: Daftar varian domain utama.
@@ -59,7 +94,8 @@ Feature Variant Clustering adalah pola organisasi dalam arsitektur FCDDA yang me
 
 **Fitur**: `event-management`  
 **Variants**: `tournament`, `league`  
-**Code**:
+
+### Contoh Standard Variant Clustering:
 
 ```
 features/event-management/
@@ -88,21 +124,53 @@ features/event-management/
       customer/LeagueOverview.tsx
 ```
 
+### Contoh Simplified Variant Clustering:
+
+```
+features/event-management/
+  models/
+    common.ts             # shared model
+    index.ts
+  services/
+    common.ts             # shared service
+    index.ts
+  hooks/
+    useEvents.ts          # shared hook
+    index.ts
+  variants/
+    tournament/
+      model.ts
+      service.ts
+      hook.ts
+      ui/
+        admin/ButtonGroup.tsx
+        organizer/TournamentView.tsx
+    league/
+      model.ts
+      service.ts
+      hook.ts
+      ui/
+        admin/LeagueSettings.tsx
+        customer/LeagueOverview.tsx
+```
+
 ## 6. Best Practices dan Checklist
 
 - [ ] Models dan services yang shared diletakkan di folder utama fitur, bukan di subfolder variant.
 - [ ] Hooks/Utils varian terpisah dengan nama folder sesuai varian.
-- [ ] UI adapter per role konsisten di dalam `ui/<variant>/<role>/`.
+- [ ] UI adapter per role konsisten di dalam struktur folder.
 - [ ] Barrel file (`index.ts`) menggabungkan export common dan per varian.
 - [ ] Tidak ada code duplication antar subfolder variant.
 - [ ] Buat dokumentasi singkat di tiap subfolder variant untuk menjelaskan peran file.
+- [ ] Pilih pendekatan yang konsisten (Standard atau Simplified) untuk seluruh project.
 
 ## 7. Kendala dan Solusi Umum
 
 - **Dependensi Silang**: Hindari import antar varian. Gunakan common services.
-- **Redundansi UI**: Abstract component ke `ui/shared` saat muncul di 2+ varian.
+- **Redundansi UI**: Abstract component ke `ui/shared` atau `variants/shared` saat muncul di 2+ varian.
 - **Kompleksitas Barrel**: Gunakan path alias (`@/features/...`) untuk kemudahan import.
+- **Memilih Pendekatan**: Gunakan Standard untuk varian dengan banyak shared code, Simplified untuk varian yang lebih independen.
 
 ## 8. Kesimpulan
 
-Feature Variant Clustering membantu menjaga struktur project tetap terorganisir dan scalable. Dengan mengikuti panduan ini, tim developer dapat menambah, memelihara, dan menguji varian baru dengan konsisten.
+Feature Variant Clustering membantu menjaga struktur project tetap terorganisir dan scalable. Dengan mengikuti panduan ini, tim developer dapat menambah, memelihara, dan menguji varian baru dengan konsisten. Fleksibilitas dalam memilih struktur folder (Standard atau Simplified) memungkinkan tim untuk beradaptasi dengan kebutuhan spesifik project.
