@@ -5,6 +5,6 @@ export const metadata = {
   description: "Kelola dan pantau scoring untuk semua event panahan",
 };
 
-export default function OrganizerScoringPage() {
+export default function ScoringManagementPage() {
   return <OrganizerScoringManagementAdapter />;
 }

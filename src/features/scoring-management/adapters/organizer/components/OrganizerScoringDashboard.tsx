@@ -1,105 +1,32 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   ArrowDownCircle, 
   ArrowUpCircle, 
-  BarChart3, 
   Calendar, 
-  ChevronRight, 
   Clock, 
   Eye, 
   LucideTarget, 
-  Medal, 
   Tag, 
   Timer, 
-  Users 
+  Users,
+  Cog
 } from "lucide-react";
 import Link from "next/link";
+import { ScoringEvent, ScoringEventStatus, ScoringStats } from "../../../models/scoring-event";
 
-// Data dummy untuk event scoring
-const scoringEvents = [
-  {
-    id: "123",
-    name: "Kejuaraan Nasional Panahan 2025",
-    roundName: "Kualifikasi",
-    status: "Sedang Berlangsung",
-    location: "Lapangan Panahan Senayan, Jakarta",
-    date: "15-17 Juni 2025",
-    currentSession: "Kualifikasi Putaran 2",
-    activeArchers: 72,
-    completedScores: 45,
-    pendingScores: 27,
-    timeRemaining: "01:30:00",
-    categories: 8,
-  },
-  {
-    id: "124",
-    name: "Archery Open Junior 2025",
-    roundName: "Eliminasi",
-    status: "Menunggu Mulai",
-    location: "GOR Arcadia, Bandung",
-    date: "1-2 Juni 2025",
-    currentSession: "Eliminasi 1/8",
-    activeArchers: 36,
-    completedScores: 0,
-    pendingScores: 36,
-    timeRemaining: "00:45:00",
-    categories: 4,
-  },
-  {
-    id: "125",
-    name: "Liga Panahan Kota 2025",
-    roundName: "Final",
-    status: "Selesai",
-    location: "Lapangan Panahan Kota, Surabaya",
-    date: "25-27 April 2025",
-    currentSession: "Final",
-    activeArchers: 8,
-    completedScores: 8,
-    pendingScores: 0,
-    timeRemaining: "00:00:00",
-    categories: 6,
-  },
-  {
-    id: "126",
-    name: "Invitational Archery Tournament",
-    roundName: "Kualifikasi",
-    status: "Jeda",
-    location: "Lapangan Utama, Yogyakarta",
-    date: "8-9 Juli 2025",
-    currentSession: "Kualifikasi Putaran 1",
-    activeArchers: 48,
-    completedScores: 32,
-    pendingScores: 16,
-    timeRemaining: "00:15:00",
-    categories: 6,
-  },
-];
+interface OrganizerScoringDashboardProps {
+  events: ScoringEvent[];
+  stats: ScoringStats | null;
+  calculateProgress: (completed: number, total: number) => number;
+  getStatusBadgeClasses: (status: ScoringEventStatus) => string;
+}
 
-export function OrganizerScoringAdapter() {
-  // Helper function untuk mendapatkan status badge classes berdasarkan status
-  const getStatusBadgeClasses = (status: string) => {
-    switch (status) {
-      case 'Sedang Berlangsung':
-        return 'bg-green-100 text-green-800';
-      case 'Menunggu Mulai':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Jeda':
-        return 'bg-blue-100 text-blue-800';
-      case 'Selesai':
-        return 'bg-slate-100 text-slate-800';
-      default:
-        return 'bg-slate-100 text-slate-800';
-    }
-  };
-
-  // Helper function untuk progress bar
-  const calculateProgress = (completed: number, total: number) => {
-    return Math.floor((completed / total) * 100);
-  };
-
+export function OrganizerScoringDashboard({
+  events,
+  stats,
+  calculateProgress,
+  getStatusBadgeClasses
+}: Readonly<OrganizerScoringDashboardProps>) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -107,12 +34,7 @@ export function OrganizerScoringAdapter() {
           <h1 className="text-2xl font-bold mb-2">Manajemen Scoring</h1>
           <p className="text-slate-600">Kelola dan pantau scoring untuk semua event panahan.</p>
         </div>
-        <Link href="/organizer/scoring/setup">
-          <Button className="flex items-center">
-            <BarChart3 size={16} className="mr-2" />
-            Setup Scoring Baru
-          </Button>
-        </Link>
+        {/* Tombol setup scoring baru dihapus karena tidak diperlukan */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-6 mb-8">
@@ -121,7 +43,7 @@ export function OrganizerScoringAdapter() {
             <CardTitle className="text-lg">Event Aktif</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-blue-600">2</p>
+            <p className="text-3xl font-bold text-blue-600">{stats?.activeEvents ?? 0}</p>
             <div className="text-sm text-blue-700 mt-1">Dengan skor sedang diproses</div>
           </CardContent>
         </Card>
@@ -131,7 +53,7 @@ export function OrganizerScoringAdapter() {
             <CardTitle className="text-lg">Archer Aktif</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-green-600">108</p>
+            <p className="text-3xl font-bold text-green-600">{stats?.activeArchers ?? 0}</p>
             <div className="text-sm text-green-700 mt-1">Sedang berpartisipasi hari ini</div>
           </CardContent>
         </Card>
@@ -141,7 +63,7 @@ export function OrganizerScoringAdapter() {
             <CardTitle className="text-lg">Skor Selesai</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-purple-600">77</p>
+            <p className="text-3xl font-bold text-purple-600">{stats?.completedScores ?? 0}</p>
             <div className="text-sm text-purple-700 mt-1">Total hari ini</div>
           </CardContent>
         </Card>
@@ -151,7 +73,7 @@ export function OrganizerScoringAdapter() {
             <CardTitle className="text-lg">Juri Aktif</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-orange-600">12</p>
+            <p className="text-3xl font-bold text-orange-600">{stats?.activeJudges ?? 0}</p>
             <div className="text-sm text-orange-700 mt-1">Memvalidasi scoring</div>
           </CardContent>
         </Card>
@@ -160,7 +82,7 @@ export function OrganizerScoringAdapter() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">Daftar Event Scoring</h2>
         <div className="space-y-4">
-          {scoringEvents.map((event) => (
+          {events.map((event) => (
             <div key={event.id} className="bg-white rounded-lg shadow-sm border p-5">
               <div className="flex flex-col lg:flex-row lg:items-start justify-between">
                 <div className="mb-3 lg:mb-0 lg:pr-6 lg:w-8/12">
@@ -231,26 +153,20 @@ export function OrganizerScoringAdapter() {
                 
                 <div className="flex flex-col gap-2 lg:w-4/12">
                   <Link 
-                    href={`/organizer/scoring/${event.id}/dashboard`}
+                    href={`/organizer/scoring/${event.id}/manage`}
                     className="inline-flex items-center justify-center text-base font-medium bg-blue-600 text-white rounded-md px-4 py-3 w-full hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     <Eye size={18} className="mr-2" />
-                    Kelola Scoring Event
+                    Kelola Scoring
                   </Link>
                   
                   <Link 
-                    href={`/organizer/scoring/${event.id}/leaderboard`}
+                    href={`/organizer/scoring/setup?eventId=${event.id}`}
                     className="inline-flex items-center justify-center text-sm text-blue-600 hover:text-blue-800 border border-blue-600 hover:border-blue-800 rounded-md px-4 py-2 w-full"
                   >
-                    <Medal size={16} className="mr-2" />
-                    Leaderboard
-                    <ChevronRight size={16} className="ml-1" />
+                    <Cog size={16} className="mr-2" />
+                    Konfigurasi Scoring
                   </Link>
-                  
-                  <Button variant="outline" size="sm" className="w-full">
-                    <BarChart3 size={16} className="mr-2" />
-                    Statistik
-                  </Button>
                 </div>
               </div>
             </div>
