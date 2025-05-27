@@ -7,9 +7,9 @@ import { Calendar, ChevronLeft, Save } from "lucide-react";
 import Link from "next/link";
 import ScheduleSettingsCard from "@/components/scoring-settings/ScheduleSettingsCard";
 
-export default function ScheduleSettingsPage({ params }: { params: { eventId: string } }) {
+export default function ScheduleSettingsPage({ params }: { params: Promise<{ eventId: string }> }) {
   // Unwrap params using React.use()
-  const { eventId } = React.use(params as unknown as Promise<{ eventId: string }>);
+  const { eventId } = React.use(params);
   
   // Fetch event details including available dates
   // This would typically come from an API call
